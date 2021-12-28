@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+//Trying comment first
 //new comment second
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
