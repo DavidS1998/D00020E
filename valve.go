@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 )
+
+type ValveData struct {
+	Degrees int
+}
 
 var servoPosition = 90
 
@@ -14,7 +18,10 @@ func main() {
 	go http.HandleFunc("/turn/", adjustServo)
 
 	// Listens for incoming connections
-	http.ListenAndServe(":8092", nil)
+	if err := http.ListenAndServe(":8092", nil); err != nil {
+		panic(err)
+	}
+
 }
 
 // Prints out servo position data
@@ -24,24 +31,19 @@ func home(w http.ResponseWriter, req *http.Request) {
 
 // TODO: Incorrect implementation of handling PUT requests. Temporary solution
 func adjustServo(w http.ResponseWriter, req *http.Request) {
-	// Should run a Python script
-
-
 	// Reads the value after /turn/###
-	path := strings.Split(req.URL.Path, "/")
-	last := path[len(path)-1]
 
-	// Convert to int
-	num, err := strconv.Atoi(last)
+	var v ValveData
+
+	err := json.NewDecoder(req.Body).Decode(&v)
 	if err != nil {
-		// Print error
-		fmt.Println(err)
-	} else {
-		// Turn this many degrees
-		servoPosition += num
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	// Automatically redirects to home
+	servoPosition += v.Degrees
+
+	// // Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 	return
 }
