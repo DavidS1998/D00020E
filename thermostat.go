@@ -14,6 +14,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -26,6 +28,7 @@ var thermometerServicePort = "8091"
 var valveServiceAddress = "http://localhost:"
 var valveServicePort = "8092"
 
+
 // Only turn the valve if the temperature differs this much
 var temperatureTolerance = 3
 
@@ -33,13 +36,34 @@ var temperatureTolerance = 3
 var desiredTemperature = 0
 var currentTemperature = 0
 
+type ClientInfo struct {
+	ClientName   string
+	ClientStatus string
+}
+type ValveData struct {
+	Degrees int
+}
+
+var (
+	ci     *ClientInfo
+	client *http.Client
+	v      *ValveData
+)
+
 func main() {
+	fmt.Println("Initializing thermostat system on port 8090")
+	initClient()
+
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/set/", setDesiredTemperature)
+	go http.HandleFunc("/turnValve/", setValve)
 
 	// Listens for incoming connections
-	http.ListenAndServe(":8090", nil)
+	if err := http.ListenAndServe(":8090", nil); err != nil {
+		panic(err)
+	}
+
 }
 
 // Prints out thermostat data, such as desired and current temperature
@@ -56,9 +80,21 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='http://localhost:8091/'>Thermometer </a>")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
+	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, "<a href='http://localhost:8090/turnValve/'>TurnValve</a>")
 
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "Offset: "+strconv.Itoa(currentTemperatureOffset()))
+}
+
+func initClient() {
+
+	ci = &ClientInfo{
+		ClientName:   "Thermostat",
+		ClientStatus: "Alive",
+	}
+	client = &http.Client{}
+
 }
 
 // Sets the desired temperatured according to URL parameters at
@@ -86,7 +122,7 @@ func setDesiredTemperature(w http.ResponseWriter, req *http.Request) {
 
 	// Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
-	return
+
 }
 
 // Get the difference between the ideal and current temperature
@@ -114,14 +150,47 @@ func calculateDegreesToTurnValve(celsius int) int {
 	return turn
 }
 
+// func PutRequest(url string, data io.Reader) {
+
+// }
+
+func setValve(w http.ResponseWriter, req *http.Request) {
+
+	turnValve(1) // Sends a put request
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}
+
 // TODO: PUT request to turn the valve
 func turnValve(degrees int) {
-	/* // Tries connecting to the valve service
-	resp, err := http.NewRequest("PUT", valveServiceAddress + valveServicePort, strconv.Itoa(degrees))
+
+	v = &ValveData{
+		Degrees: degrees,
+	}
+
+	json, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close() */
+
+	// Set the HTTP method, url and request body
+	req, err := http.NewRequest(http.MethodPut, valveServiceAddress+valveServicePort+"/turn/", bytes.NewBuffer(json))
+	if err != nil {
+		panic(err)
+	}
+	defer req.Body.Close()
+	//Set the request header Content-Type for json
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print("Received response: ", resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	// closing any idle-connections that were previously connected from previous requests butare now in a "keep-alive state"
+	client.CloseIdleConnections()
+
 }
 
 // Scans the provided value from the thermometer service

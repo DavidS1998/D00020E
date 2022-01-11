@@ -7,11 +7,15 @@ import (
 )
 
 func main() {
+	fmt.Println("Initializing thermometer system on port 8091")
+
 	// What to execute for various page requests
 	go http.HandleFunc("/", getTemperature)
 
 	// Listens for incoming connections
-	http.ListenAndServe(":8091", nil)
+	if err := http.ListenAndServe(":8091", nil); err != nil {
+		panic(err)
+	}
 }
 
 // Home page that includes a link to a subpage
@@ -27,7 +31,6 @@ func readTemperature() int {
 	   	var randomNum = rand.Intn(50)
 
 	   	return randomNum */
-
 	return 28
 }
 
