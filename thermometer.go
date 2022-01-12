@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+	fmt.Println("Initializing thermometer system on port 8091")
+
 	// What to execute for various page requests
 	go http.HandleFunc("/", getTemperature)
 

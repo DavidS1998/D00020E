@@ -28,6 +28,7 @@ var thermometerServicePort = "8091"
 var valveServiceAddress = "http://localhost:"
 var valveServicePort = "8092"
 
+
 // Only turn the valve if the temperature differs this much
 var temperatureTolerance = 3
 
@@ -50,7 +51,7 @@ var (
 )
 
 func main() {
-
+	fmt.Println("Initializing thermostat system on port 8090")
 	initClient()
 
 	// What to execute for various page requests

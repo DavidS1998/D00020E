@@ -14,6 +14,8 @@ type ValveData struct {
 var servoPosition = 90
 
 func main() {
+	fmt.Println("Initializing valve system on port 8092")
+
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/turn/", adjustServo)
 
