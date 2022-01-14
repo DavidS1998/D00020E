@@ -1,4 +1,5 @@
 # Takes an input and spins the connected valve on the GPIO ports
+# Run with the command "python server.py ##", where # is how many degrees to turn
 
 import RPi.GPIO as GPIO
 import sys
@@ -16,6 +17,7 @@ def SetAngle(angle):
         sleep(1)
         GPIO.output(32, False)
         pwm.ChangeDutyCycle(0)
+        print("PYTHON: Turned servo " + str(angle) + " degrees")
 
 pos= int(sys.argv[1])
 SetAngle(pos)
