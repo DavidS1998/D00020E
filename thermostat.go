@@ -28,7 +28,6 @@ var thermometerServicePort = "8091"
 var valveServiceAddress = "http://localhost:"
 var valveServicePort = "8092"
 
-
 // Only turn the valve if the temperature differs this much
 var temperatureTolerance = 3
 
@@ -160,7 +159,7 @@ func setValve(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 }
 
-// TODO: PUT request to turn the valve
+//
 func turnValve(degrees int) {
 
 	v = &ValveData{
