@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
 	"strconv"
 )
@@ -17,12 +16,6 @@ type ValveData struct {
 var servoPosition = 90
 
 func main() {
-
-	cmd := exec.Command("./hello.py")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	log.Println(cmd.Run())
-
 	fmt.Println("Initializing valve system on port 8092")
 
 	go http.HandleFunc("/", home)
