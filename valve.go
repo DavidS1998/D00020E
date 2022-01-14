@@ -44,6 +44,7 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	servoPosition += v.Degrees
+	fmt.Println("VALVE: Turned servo " + strconv.Itoa(servoPosition) + " degrees")
 
 	// // Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
