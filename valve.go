@@ -13,6 +13,7 @@ type ValveData struct {
 	Degrees int
 }
 
+// Can have a position between 0-180 degrees
 var servoPosition = 90
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/turn/", adjustServo)
+	go http.HandleFunc("/get/", getPosition)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8092", nil); err != nil {
@@ -29,7 +31,14 @@ func main() {
 
 // Prints out servo position data
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current position: </p>\n"+strconv.Itoa(servoPosition))
+	var max = 180.0
+	var percentage = (float64(servoPosition) / max) * 100
+	fmt.Fprintf(w, "<p>Current position: </p>\n"+fmt.Sprintf("%.2f", percentage)+"%%")
+}
+
+// Used with GET requests to get current position
+func getPosition(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, strconv.Itoa(servoPosition))
 }
 
 //
@@ -43,6 +52,14 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	servoPosition += v.Degrees
+
+	// The servo can only be in a position between 0 and 180 degrees.
+	if servoPosition > 180 {
+		servoPosition = 180
+	} else if servoPosition < 0 {
+		servoPosition = 0
+	}
+
 	fmt.Println("VALVE: Turned servo " + strconv.Itoa(v.Degrees) + " degrees to " + strconv.Itoa(servoPosition))
 	runPythonScript(v.Degrees)
 
@@ -58,6 +75,7 @@ func runPythonScript(value int) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Python response: ")
 	fmt.Println(out)
 }
 

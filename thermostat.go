@@ -80,7 +80,7 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://localhost:8090/turnValve/'>TurnValve</a>")
+	//fmt.Fprintf(w, "<a href='http://localhost:8090/turnValve/'>Turn valve +1</a>")
 
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "Offset: "+strconv.Itoa(currentTemperatureOffset()))
@@ -183,7 +183,7 @@ func turnValve(degrees int) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print("Received response: ", resp.StatusCode)
+	fmt.Println("Received response: ", resp.StatusCode)
 
 	defer resp.Body.Close()
 
