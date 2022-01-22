@@ -19,6 +19,9 @@ var servoPosition = 90
 func main() {
 	fmt.Println("Initializing valve system on port 8092")
 
+	// Turns the servo to a default position when initialized
+	runPythonScript(servoPosition)
+
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/turn/", adjustServo)
 	go http.HandleFunc("/get/", getPosition)
@@ -43,16 +46,16 @@ func getPosition(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, strconv.Itoa(servoPosition))
 }
 
-//
+// Decodes the position data and normalizes it to a possible range (0-180)
 func adjustServo(w http.ResponseWriter, req *http.Request) {
+	// Decode JSON and get Degrees
 	var v ValveData
-
 	err := json.NewDecoder(req.Body).Decode(&v)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	// Update internal position
 	servoPosition += v.Degrees
 
 	// The servo can only be in a position between 0 and 180 degrees.
@@ -64,6 +67,7 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 		servoPosition = 0
 	}
 
+	// Update physical position
 	fmt.Println("VALVE: Turning servo " + strconv.Itoa(v.Degrees) + " degrees to position " + strconv.Itoa(servoPosition))
 	runPythonScript(servoPosition)
 

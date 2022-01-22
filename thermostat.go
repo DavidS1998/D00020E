@@ -67,10 +67,10 @@ func main() {
 
 }
 
-// Prints out thermostat data, such as desired and current temperature
+// Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>\n"+getTempFromThermometer())
-	fmt.Fprintf(w, "<p>Current radius: </p>\n"+getRadiusFromValve())
+	fmt.Fprintf(w, "<p>Current temperature: </p>\n"+getFromService(thermometerServiceAddress, thermometerServicePort, ""))
+	fmt.Fprintf(w, "<p>Current radius: </p>\n"+getFromService(valveServiceAddress, valveServicePort, "get"))
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
@@ -84,6 +84,7 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
 }
 
+// TODO: comment
 func initClient() {
 
 	ci = &ClientInfo{
@@ -94,8 +95,9 @@ func initClient() {
 
 }
 
-// Sets the desired temperature according to URL parameters at
-// localhost:8090/set/##
+// Gets how much to turn the servo with, and forwards the
+// formatted data as a query
+// URL to get data from: localhost:8090/set/##
 func setValve(w http.ResponseWriter, req *http.Request) {
 	// Reads the value after /set/###
 	path := strings.Split(req.URL.Path, "/")
@@ -104,18 +106,17 @@ func setValve(w http.ResponseWriter, req *http.Request) {
 	// Convert to int
 	num, err := strconv.Atoi(last)
 	if err != nil {
-		// Print error
 		fmt.Println(err)
-	} else {
-		// Set temperature
-		sendToValve(num)
 	}
 
-	// Automatically redirects to home
+	// PUT request for turning servo
+	sendToValve(num)
+
+	// Automatically redirect to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 }
 
-// Sends order to turn the servo in the Valve service
+// Sends PUT request to turn the servo in the Valve service
 func sendToValve(degrees int) {
 
 	v = &ValveData{
@@ -133,6 +134,7 @@ func sendToValve(degrees int) {
 		panic(err)
 	}
 	defer req.Body.Close()
+
 	//Set the request header Content-Type for json
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
@@ -141,20 +143,19 @@ func sendToValve(degrees int) {
 	if err != nil {
 		panic(err)
 	}
+	defer resp.Body.Close()
 	fmt.Println("Received response: ", resp.StatusCode)
 
-	defer resp.Body.Close()
-
-	// closing any idle-connections that were previously connected from previous requests butare now in a "keep-alive state"
+	// closing any idle-connections that were previously connected from
+	// previous requests but are now in a "keep-alive state"
 	client.CloseIdleConnections()
-
 }
 
-// TODO: Refactor into one universal GET function
-// Scans the provided value from the thermometer service
-func getTempFromThermometer() string {
+// Sends a GET request to a service
+// Will be formatted as ADDR:PORT/SUBPAGE/
+func getFromService(addr string, port string, subpage string) string {
 	// Tries connecting to the thermometer service
-	resp, err := http.Get(thermometerServiceAddress + thermometerServicePort)
+	resp, err := http.Get(addr + port + "/" + subpage + "/")
 	if err != nil {
 		panic(err)
 	}
@@ -176,35 +177,6 @@ func getTempFromThermometer() string {
 	} else {
 		// Set temperature
 		currentTemperature = float64(num)
-	}
-	return value
-}
-
-// Scans the provided value from the thermometer service
-func getRadiusFromValve() string {
-	// Tries connecting to the thermometer service
-	resp, err := http.Get(valveServiceAddress + valveServicePort + "/get/")
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	// Variable to store the temperature in
-	var value = ""
-	// Scans and prints the input
-	scanner := bufio.NewScanner(resp.Body)
-	for i := 0; scanner.Scan() && i < 5; i++ {
-		value = scanner.Text()
-	}
-
-	// Convert to int
-	num, err := strconv.Atoi(value)
-	if err != nil {
-		// Print error
-		fmt.Println(err)
-	} else {
-		// Set temperature
-		currentRadius = float64(num)
 	}
 	return value
 }
