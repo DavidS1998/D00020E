@@ -72,9 +72,9 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<p>Current temperature: </p>\n"+getTempFromThermometer())
 	fmt.Fprintf(w, "<p>Current radius: </p>\n"+getRadiusFromValve())
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(5)+"'>Turn +5° </a>")
+	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-5)+"'>Turn -5° </a>")
+	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
 	fmt.Fprintf(w, "<br>")
 
 	// Handy links to the other services
