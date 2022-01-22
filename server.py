@@ -17,7 +17,7 @@ def SetAngle(angle):
         sleep(1)
         GPIO.output(32, False)
         pwm.ChangeDutyCycle(0)
-        print("PYTHON: Turned servo to " + str(angle) + " degrees")
+        print("PYTHON: Successfully turned servo to " + str(angle) + " degrees")
 
 pos= int(sys.argv[1])
 SetAngle(pos)

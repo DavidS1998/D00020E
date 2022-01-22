@@ -56,14 +56,16 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 	servoPosition += v.Degrees
 
 	// The servo can only be in a position between 0 and 180 degrees.
+	// Furthermore, the Python script responsible for turning the
+	// servo can only handle positive values up to 180 (or it will crash)
 	if servoPosition > 180 {
 		servoPosition = 180
 	} else if servoPosition < 0 {
 		servoPosition = 0
 	}
 
-	fmt.Println("VALVE: Turned servo " + strconv.Itoa(v.Degrees) + " degrees to " + strconv.Itoa(servoPosition))
-	//runPythonScript(v.Degrees)
+	fmt.Println("VALVE: Turning servo " + strconv.Itoa(v.Degrees) + " degrees to position " + strconv.Itoa(servoPosition))
+	runPythonScript(servoPosition)
 
 	// Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
@@ -77,8 +79,9 @@ func runPythonScript(value int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Python response: ")
-	fmt.Println(out)
+
+	// The Python script will return the following byte array
+	fmt.Println(string([]byte(out)))
 }
 
 // Register IP and port data to the Service Registry

@@ -2,6 +2,12 @@
 Run with
 go run thermometer.go & go run thermostat.go & go run valve.go
 
+Use
+CURL localhost:8090
+and
+CURL localhost:8090/set/##
+to print current status data, or to turn the servo
+
 Then visit
 http://localhost:8090/
 
@@ -88,7 +94,7 @@ func initClient() {
 
 }
 
-// Sets the desired temperatured according to URL parameters at
+// Sets the desired temperature according to URL parameters at
 // localhost:8090/set/##
 func setValve(w http.ResponseWriter, req *http.Request) {
 	// Reads the value after /set/###
@@ -129,6 +135,8 @@ func sendToValve(degrees int) {
 	defer req.Body.Close()
 	//Set the request header Content-Type for json
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	// Sends the request, and waits for the response
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
