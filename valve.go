@@ -34,6 +34,8 @@ func home(w http.ResponseWriter, req *http.Request) {
 	var max = 180.0
 	var percentage = (float64(servoPosition) / max) * 100
 	fmt.Fprintf(w, "<p>Current position: </p>\n"+fmt.Sprintf("%.2f", percentage)+"%%")
+	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, strconv.Itoa(servoPosition)+"°"+"/180°")
 }
 
 // Used with GET requests to get current position
@@ -61,7 +63,7 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println("VALVE: Turned servo " + strconv.Itoa(v.Degrees) + " degrees to " + strconv.Itoa(servoPosition))
-	runPythonScript(v.Degrees)
+	//runPythonScript(v.Degrees)
 
 	// Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
