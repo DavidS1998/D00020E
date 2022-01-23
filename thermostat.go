@@ -49,6 +49,7 @@ var (
 	v      *ValveData
 )
 
+// Trying comment 3
 func main() {
 	fmt.Println("Initializing thermostat system on port 8090")
 	initClient()
