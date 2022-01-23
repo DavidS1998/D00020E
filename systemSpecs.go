@@ -1,4 +1,4 @@
-package regforms
+package schoolproject
 
 // A device that hosts systems has specific attributes
 type Device struct {

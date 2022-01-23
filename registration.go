@@ -1,4 +1,4 @@
-package regforms
+package schoolproject
 
 import "strconv"
 
