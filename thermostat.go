@@ -70,9 +70,10 @@ func main() {
 
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>\n"+getFromService(thermometerServiceAddress, thermometerServicePort, ""))
-	fmt.Fprintf(w, "<p>Current radius: </p>\n"+getFromService(valveServiceAddress, valveServicePort, "get"))
-	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, ""))
+	// TODO: Write rotation percentage in addition to the angle
+	fmt.Fprintf(w, "\n<p>Current radius: </p>"+getFromService(valveServiceAddress, valveServicePort, "get"))
+	fmt.Fprintf(w, "\n<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
@@ -96,7 +97,7 @@ func initClient() {
 
 }
 
-// Gets how much to turn the servo with, and forwards the
+// Gets how much to turn the servo with, and forwäöards the
 // formatted data as a query
 // URL to get data from: localhost:8090/set/##
 func setValve(w http.ResponseWriter, req *http.Request) {

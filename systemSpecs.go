@@ -1,4 +1,4 @@
-package schoolproject
+package main
 
 // A device that hosts systems has specific attributes
 type Device struct {

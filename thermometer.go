@@ -1,12 +1,8 @@
 package main
 
 import (
-	r "VSCodeGo/services/thermometer/regforms"
-	"bytes"
-	"encoding/json"
+	//r "VSCodeGo/services/thermometer/regforms"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -39,15 +35,8 @@ func readTemperature() int {
 	return 28
 }
 
-// Register IP and port data to the Service Registry
-/* func registerProviderToSR() {
-
-
-}
-*/
-
 // Register service Service Registry
-func registerServiceToSR(srg r.ServiceRegReq) {
+/* func registerServiceToSR(srg r.ServiceRegReq) {
 
 	// Converting the object/struct v into a JSON encoding and returns a byte code of the JSON.
 	payload, err := json.MarshalIndent(srg, "", " ")
@@ -96,3 +85,4 @@ func registerServiceToSR(srg r.ServiceRegReq) {
 	// closing any idle-connections that were previously connected from previous requests butare now in a "keep-alive state"
 	client.CloseIdleConnections()
 }
+*/

@@ -1,4 +1,4 @@
-package schoolproject
+package main
 
 import "strconv"
 
