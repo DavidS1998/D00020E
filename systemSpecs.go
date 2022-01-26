@@ -22,9 +22,9 @@ type System struct {
 
 // An Arrowhead service has specific properties
 type Service struct {
-	ServiceDefinition string            `json:"servicedefinition"`
-	ServiceName       string            `json:"servicename"`
-	Path              string            `json:"path"`
-	Metadata          map[string]string `json:"metadata"`
-	Version           string            `json:"version"`
+	ServiceDefinition string   `json:"servicedefinition"`
+	ServiceName       string   `json:"servicename"`
+	Path              string   `json:"path"`
+	Metadata          []string `json:"metadata"`
+	Version           int      `json:"version"`
 }
