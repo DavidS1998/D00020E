@@ -1,0 +1,1 @@
+python3 ds18b20.py

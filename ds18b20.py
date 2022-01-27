@@ -35,4 +35,4 @@ if __name__ == '__main__':
 
   # Script has been called directly
   id = '28-00000dee453b'
-  print("Temp : " + '{:.3f}'.format(gettemp(id)/float(1000)))
+  print('{:.1f}'.format(gettemp(id)/float(1000)))
