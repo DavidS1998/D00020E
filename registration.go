@@ -23,17 +23,17 @@ func FillRegistrationForm(system System, service Service) ServiceRegReq {
 // JSON(byte data of the encoded JSON) to object/struct) a service registration,
 // a struct is used based on the IDD (Interaction-driven design) of the Service registry.
 type ServiceRegReq struct {
-	ServiceDefinition string         `json:"serviceDefinition"` // `json:"serviceDefinition` --> this is a struct tag the allows us to change the name of the variable in the outprint to "serviceDefinition" from "ServiceDefinition"
-	ProviderSystemVar ProviderSystem `json:"providerSystem"`
-	ServiceUri        string         `json:"serviceURI"`
-	EndOfValidity     string         `json:"endOfValidity"`
-	Secure            string         `json:"secure"`
-	Metadata          []string       `json:"metadata"`
-	Version           int            `json:"version"`
-	Interfaces        []string       `json:"interface"`
+	ServiceDefinition string            `json:"serviceDefinition"` // `json:"serviceDefinition` --> this is a struct tag the allows us to change the name of the variable in the outprint to "serviceDefinition" from "ServiceDefinition"
+	ProviderSystemVar ProviderSystemReg `json:"providerSystem"`
+	ServiceUri        string            `json:"serviceURI"`
+	EndOfValidity     string            `json:"endOfValidity"`
+	Secure            string            `json:"secure"`
+	Metadata          []string          `json:"metadata"`
+	Version           int               `json:"version"`
+	Interfaces        []string          `json:"interface"`
 }
 
-type ProviderSystem struct {
+type ProviderSystemReg struct {
 	SystemName         string `json:"systemName"`
 	Address            string `json:"address"`
 	Port               int    `json:"port"`
