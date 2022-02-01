@@ -53,10 +53,9 @@ func readTemperature() float64 {
 	}
 }
 
-
 // Register service Service Registry
 func home(w http.ResponseWriter, req *http.Request) {
-
+	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature()))
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 }
 
@@ -75,16 +74,16 @@ func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 		ProviderSystemVar: q.ProviderSystemReg{
 			SystemName:         "bb",
 			Address:            "cc",
-			Port:               222,
+			Port:               8091,
 			AuthenticationInfo: "dd",
 		},
 		ServiceUri:    "ee",
 		EndOfValidity: "ff",
 		Secure:        "gg",
 		Metadata: []string{
-			"metadata1",
-			"metadata2",
-			"metadata3",
+			"Thermometer",
+			"Celsius",
+			"Indoors",
 			"metadata4",
 		},
 
