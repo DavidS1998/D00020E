@@ -25,7 +25,7 @@ func main() {
 	//go http.HandleFunc("/", getTemperature)
 
 	go http.HandleFunc("/", home)
-
+	go http.HandleFunc("/get/", getTemperature)
 	go http.HandleFunc("/sendServiceReg/", registerService)
 
 	// Listens for incoming connections
@@ -36,18 +36,29 @@ func main() {
 
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, strconv.Itoa(readTemperature()))
+	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature()))
 }
 
 // Returns a temperature
 // TODO: Should be connected to a sensor
-func readTemperature() int {
-	// Sends a random number between 0 and 50 (for now)
-	/* 	rand.Seed(time.Now().UnixNano())
-	   	var randomNum = rand.Intn(50)
-
-	   	return randomNum */
-	return 28
+// Sends a command to a bash script that forwards the value
+// argument to a Python script to turn the servo
+func readTemperature() float64 {
+	// Call Python script
+	out, err := exec.Command("/bin/sh", "gettemp.sh").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output from thermometer sensor
+	var temperature = string([]byte(out))
+	// Trim new line symbol
+	temperature = strings.TrimSuffix(temperature, "\n")
+	// Parse float from output
+	if s, err := strconv.ParseFloat(temperature, 64); err == nil {
+		return s
+	} else {
+		return -1
+	}
 }
 
 // Register IP and port data to the Service Registry
