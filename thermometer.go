@@ -17,8 +17,6 @@ func main() {
 	fmt.Println(uuid)
 
 	// What to execute for various page requests
-	//go http.HandleFunc("/", getTemperature)
-
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/get/", getTemperature)
 	go http.HandleFunc("/sendServiceReg/", registerService)
