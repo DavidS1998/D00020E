@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 )
@@ -32,8 +34,6 @@ func getTemperature(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature()))
 }
 
-// Returns a temperature
-// TODO: Should be connected to a sensor
 // Sends a command to a bash script that forwards the value
 // argument to a Python script to turn the servo
 func readTemperature() float64 {
@@ -54,15 +54,8 @@ func readTemperature() float64 {
 	}
 }
 
-// Register IP and port data to the Service Registry
-/* func registerProviderToSR() {
-
-
-}
-*/
 
 // Register service Service Registry
-
 func home(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
