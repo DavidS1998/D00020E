@@ -1,17 +1,10 @@
 package main
 
 import (
-	q "VSCodeGo/services/registrationAndQueryForms"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-
-	// First download this package from github with the "go get github.com/pborman/uuid"-command.
-	// github.com/pborman/uuid (the external package) is a dependency (somthing our program depends on).
-	// It then installs the "go". go mod tidy could also be used (although it differs from go get since it
-	// not only adds missing dependencies but also cleans up missing dependencies).
-	"github.com/pborman/uuid"
 )
 
 func main() {
