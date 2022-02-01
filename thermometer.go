@@ -36,6 +36,7 @@ func readTemperature() float64 {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// Output from thermometer sensor
 	var temperature = string([]byte(out))
 
