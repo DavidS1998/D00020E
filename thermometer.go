@@ -12,10 +12,14 @@ import (
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
 
+	testRand := uuid.NewRandom()
+	uuid := strings.Replace(testRand.String(), "-", "", -1)
+	fmt.Println(uuid)
+
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/get/", getTemperature)
-	//go http.HandleFunc("/sendServiceReg/", registerService)
+	go http.HandleFunc("/sendServiceReg/", registerService)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8091", nil); err != nil {
@@ -39,10 +43,8 @@ func readTemperature() float64 {
 
 	// Output from thermometer sensor
 	var temperature = string([]byte(out))
-
 	// Trim new line symbol
 	temperature = strings.TrimSuffix(temperature, "\n")
-
 	// Parse float from output
 	if s, err := strconv.ParseFloat(temperature, 64); err == nil {
 		return s
@@ -51,28 +53,26 @@ func readTemperature() float64 {
 	}
 }
 
-// Register service Service Registry
 
+// Register service Service Registry
 func home(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 }
 
-/*
 func registerService(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 
 	registerServiceToSR()
 }
 
+func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 
-func registerServiceToSR( /*srg r.ServiceRegReq ) {
+	var regreply *q.RegistrationReply = &q.RegistrationReply{}
 
-	var regreply *RegistrationReply = &RegistrationReply{}
-
-	srg := ServiceRegReq{
+	srg := &q.ServiceRegReq{
 		ServiceDefinition: "aa",
-		ProviderSystemVar: ProviderSystem{
+		ProviderSystemVar: q.ProviderSystemReg{
 			SystemName:         "bb",
 			Address:            "cc",
 			Port:               222,
@@ -97,59 +97,8 @@ func registerServiceToSR( /*srg r.ServiceRegReq ) {
 		},
 	}
 
-	// Converting the object/struct v into a JSON encoding and returns a byte code of the JSON.
-	payload, err := json.MarshalIndent(srg, "", " ")
-	if err != nil {
-		log.Println(err)
-	}
-	fmt.Println("Payload printed: ", string(payload))
+	// When calling a method you have to call it from the interface-name first
+	client, resp, err := srg.Send()
 
-	serviceRegistryURL := "http://localhost:4245/serviceregistry/register"
-
-	// Set the HTTP POST method, url and request body
-	req, err := http.NewRequest(http.MethodPost, serviceRegistryURL, bytes.NewBuffer(payload))
-	if err != nil {
-		log.Println(err)
-
-	}
-	fmt.Println("Request body printed: ", req.Body)
-
-	defer req.Body.Close()
-	//Set the request header Content-Type for json
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		log.Println(err)
-	} else {
-		log.Println("Response status: ", resp.Status)
-		log.Println("Response header: ", resp.Header)
-
-		body, readErr := ioutil.ReadAll(resp.Body)
-		if readErr != nil {
-			log.Println(readErr)
-		} else {
-			log.Println("Response boyd: ", string(body))
-			err := json.Unmarshal(body, regreply)
-			if err != nil {
-				log.Println("Unmarshal body error: ", err)
-			} else {
-				fmt.Println("Unmarshal body ok: ", *regreply)
-			}
-			// registrationReply := r.RegistrationReply{}
-			// unmarshallErr := json.Unmarshal(body, registrationReply)
-			// if unmarshallErr != nil {
-			// 	log.Println(registrationReply)
-			// }
-		}
-
-	}
-	defer resp.Body.Close()
-
-	// closing any idle-connections that were previously connected from previous requests butare now in a "keep-alive state"
-	client.CloseIdleConnections()
+	regreply.UnmarshalPrint(client, resp, err)
 }
-*/
