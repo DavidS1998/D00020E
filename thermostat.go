@@ -1,7 +1,6 @@
 package main
 
 import (
-	q "VSCodeGo/services/registrationAndQueryForms"
 	"bufio"
 	"bytes"
 	"encoding/json"
@@ -16,10 +15,6 @@ var thermometerServiceAddress = "http://localhost:"
 var thermometerServicePort = "8091"
 var valveServiceAddress = "http://localhost:"
 var valveServicePort = "8092"
-
-// Stored service variables
-var currentTemperature = 0.0
-var currentRadius = 0.0
 
 type ClientInfo struct {
 	ClientName   string
@@ -53,9 +48,23 @@ func main() {
 
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>\n"+getFromService(thermometerServiceAddress, thermometerServicePort, ""))
-	fmt.Fprintf(w, "<p>Current radius: </p>\n"+getFromService(valveServiceAddress, valveServicePort, "get"))
-	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "get"))
+
+	var max = 180.0
+	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "get")
+
+	// Parse float from output
+	if s, err := strconv.ParseFloat(currentPosition, 64); err != nil {
+		fmt.Println("Invalid input")
+	} else {
+		// Percent-based representation of the servo's position
+		var percentage = ((float64(s) / max) * 100)
+		fmt.Fprintf(w, "\n<p>Current radius: </p>"+fmt.Sprintf("%.0f", percentage)+"%%, ")
+	}
+
+	// Angle-based representation of the servo's position
+	fmt.Fprintf(w, "\n"+getFromService(valveServiceAddress, valveServicePort, "get")+"°/180°")
+	fmt.Fprintf(w, "\n<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
@@ -63,9 +72,9 @@ func home(w http.ResponseWriter, req *http.Request) {
 
 	// Handy links to the other services
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://localhost:8091/'>Thermometer </a>")
+	fmt.Fprintf(w, "<a href='http://87.96.164.242:8091/'>Thermometer </a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
+	fmt.Fprintf(w, "<a href='http://87.96.164.242:8092/'>Valve</a>")
 }
 
 // TODO: comment
@@ -153,15 +162,6 @@ func getFromService(addr string, port string, subpage string) string {
 		value = scanner.Text()
 	}
 
-	// Convert to int
-	num, err := strconv.Atoi(value)
-	if err != nil {
-		// Print error
-		fmt.Println(err)
-	} else {
-		// Set temperature
-		currentTemperature = float64(num)
-	}
 	return value
 }
 
@@ -176,8 +176,4 @@ func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 
 // Requests the networking info for requested services
 /* func requestServiceFromSR() {
-} */
-
-// Register IP and port data to the Service Registry
-/* func registerServiceToSR() {
 } */
