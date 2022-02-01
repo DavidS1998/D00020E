@@ -1,21 +1,3 @@
-/*
-Run with
-go run thermometer.go & go run thermostat.go & go run valve.go
-
-Use
-CURL localhost:8090
-and
-CURL localhost:8090/set/##
-to print current status data, or to turn the servo
-
-Then visit
-http://localhost:8090/
-
-Thermostat runs on port 	8090
-Thermometer runs on port 	8091
-Valve runs on port	 		8092
-*/
-
 package main
 
 import (
@@ -43,9 +25,9 @@ type ValveData struct {
 }
 
 var (
-	ci     *ClientInfo
-	client *http.Client
-	v      *ValveData
+	ci               *ClientInfo
+	thermostatClient *http.Client
+	v                *ValveData
 )
 
 // Trying comment 3
@@ -102,11 +84,11 @@ func initClient() {
 		ClientName:   "Thermostat",
 		ClientStatus: "Alive",
 	}
-	client = &http.Client{}
+	thermostatClient = &http.Client{}
 
 }
 
-// Gets how much to turn the servo with, and forwäöards the
+// Gets how much to turn the servo with, and forwards the
 // formatted data as a query
 // URL to get data from: localhost:8090/set/##
 func setValve(w http.ResponseWriter, req *http.Request) {
@@ -150,7 +132,7 @@ func sendToValve(degrees int) {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	// Sends the request, and waits for the response
-	resp, err := client.Do(req)
+	resp, err := thermostatClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -159,7 +141,7 @@ func sendToValve(degrees int) {
 
 	// closing any idle-connections that were previously connected from
 	// previous requests but are now in a "keep-alive state"
-	client.CloseIdleConnections()
+	thermostatClient.CloseIdleConnections()
 }
 
 // Sends a GET request to a service
@@ -183,7 +165,15 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
+func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
+
+	var serviceQueryListReply *q.OrchestrationResponse = &q.OrchestrationResponse{}
+
+	client, resp, err := serviceReq.Send()
+	serviceQueryListReply.UnmarshalPrint(client, resp, err)
+
+}
+
 // Requests the networking info for requested services
 /* func requestServiceFromSR() {
-
 } */
