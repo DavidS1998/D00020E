@@ -1,24 +1,21 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
+	"strings"
 )
 
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
 
 	// What to execute for various page requests
-	//go http.HandleFunc("/", getTemperature)
-
 	go http.HandleFunc("/", home)
-
-	go http.HandleFunc("/sendServiceReg/", registerService)
+	go http.HandleFunc("/get/", getTemperature)
+	//go http.HandleFunc("/sendServiceReg/", registerService)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8091", nil); err != nil {
@@ -28,26 +25,30 @@ func main() {
 
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, strconv.Itoa(readTemperature()))
+	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature()))
 }
 
-// Returns a temperature
-// TODO: Should be connected to a sensor
-func readTemperature() int {
-	// Sends a random number between 0 and 50 (for now)
-	/* 	rand.Seed(time.Now().UnixNano())
-	   	var randomNum = rand.Intn(50)
+// Sends a command to a bash script that forwards the value
+// argument to a Python script to turn the servo
+func readTemperature() float64 {
+	// Call Python script
+	out, err := exec.Command("/bin/sh", "gettemp.sh").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output from thermometer sensor
+	var temperature = string([]byte(out))
 
-	   	return randomNum */
-	return 28
+	// Trim new line symbol
+	temperature = strings.TrimSuffix(temperature, "\n")
+
+	// Parse float from output
+	if s, err := strconv.ParseFloat(temperature, 64); err == nil {
+		return s
+	} else {
+		return -1
+	}
 }
-
-// Register IP and port data to the Service Registry
-/* func registerProviderToSR() {
-
-
-}
-*/
 
 // Register service Service Registry
 
@@ -56,13 +57,15 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 }
 
+/*
 func registerService(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 
 	registerServiceToSR()
 }
 
-func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
+
+func registerServiceToSR( /*srg r.ServiceRegReq ) {
 
 	var regreply *RegistrationReply = &RegistrationReply{}
 
@@ -148,3 +151,4 @@ func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 	// closing any idle-connections that were previously connected from previous requests butare now in a "keep-alive state"
 	client.CloseIdleConnections()
 }
+*/
