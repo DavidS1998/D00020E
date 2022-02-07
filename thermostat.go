@@ -166,6 +166,7 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
+/*
 func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 
 	var serviceQueryListReply *q.OrchestrationResponse = &q.OrchestrationResponse{}
@@ -174,6 +175,7 @@ func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 	serviceQueryListReply.UnmarshalPrint(client, resp, err)
 
 }
+*/
 
 // Requests the networking info for requested services
 /* func requestServiceFromSR() {

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Initializing thermometer system on port 8094")
+	fmt.Println("Initializing thermometer system on port 8091")
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
@@ -17,7 +17,7 @@ func main() {
 	go http.HandleFunc("/sendServiceReg/", registerService)
 
 	// Listens for incoming connections
-	if err := http.ListenAndServe(":8094", nil); err != nil {
+	if err := http.ListenAndServe(":8091", nil); err != nil {
 		panic(err)
 	}
 }
