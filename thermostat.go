@@ -11,9 +11,9 @@ import (
 )
 
 // TODO: This data should be requested from the Service Registry in the future
-var thermometerServiceAddress = "http://localhost:"
+var thermometerServiceAddress = "http://87.96.164.242:"
 var thermometerServicePort = "8091"
-var valveServiceAddress = "http://localhost:"
+var valveServiceAddress = "http://87.96.164.242:"
 var valveServicePort = "8092"
 
 type ClientInfo struct {
@@ -50,6 +50,7 @@ func main() {
 func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "get"))
 
+	// Variables to help present data in a clearer way (Percent, degrees of total)
 	var max = 180.0
 	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "get")
 
@@ -165,6 +166,7 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
+/*
 func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 
 	var serviceQueryListReply *q.OrchestrationResponse = &q.OrchestrationResponse{}
@@ -173,6 +175,7 @@ func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 	serviceQueryListReply.UnmarshalPrint(client, resp, err)
 
 }
+*/
 
 // Requests the networking info for requested services
 /* func requestServiceFromSR() {

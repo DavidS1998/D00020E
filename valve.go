@@ -34,6 +34,7 @@ func main() {
 
 // Prints out servo position data
 func home(w http.ResponseWriter, req *http.Request) {
+	// Calculate percentage between current and max position (180 degrees)
 	var max = 180.0
 	var percentage = (float64(servoPosition) / max) * 100
 	fmt.Fprintf(w, "<p>Current position: </p>\n"+fmt.Sprintf("%.2f", percentage)+"%%")

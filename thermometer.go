@@ -2,19 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io/ioutil"
 	"net/http"
-	"os/exec"
 	"strconv"
 	"strings"
 )
 
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
-
-	testRand := uuid.NewRandom()
-	uuid := strings.Replace(testRand.String(), "-", "", -1)
-	fmt.Println(uuid)
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
@@ -29,43 +24,45 @@ func main() {
 
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature()))
+	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
 }
 
 // Sends a command to a bash script that forwards the value
 // argument to a Python script to turn the servo
-func readTemperature() float64 {
-	// Call Python script
-	out, err := exec.Command("/bin/sh", "gettemp.sh").Output()
+func readTemperature(sensorID string) float64 {
+	data, err := ioutil.ReadFile("/sys/bus/w1/devices/" + sensorID + "/w1_slave")
 	if err != nil {
-		log.Fatal(err)
+		return 9999.9
 	}
-	// Output from thermometer sensor
-	var temperature = string([]byte(out))
-	// Trim new line symbol
-	temperature = strings.TrimSuffix(temperature, "\n")
-	// Parse float from output
-	if s, err := strconv.ParseFloat(temperature, 64); err == nil {
-		return s
-	} else {
-		return -1
+	raw := string(data)
+	if !strings.Contains(raw, " YES") {
+		return 9999.9
 	}
+	i := strings.LastIndex(raw, "t=")
+	if i == -1 {
+		return 9999.9
+	}
+	temperature, err := strconv.ParseFloat(raw[i+2:len(raw)-1], 64)
+	if err != nil {
+		return 9999.9
+	}
+	return temperature / 1000.0
 }
-
 
 // Register service Service Registry
 func home(w http.ResponseWriter, req *http.Request) {
-
-	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
+	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
+	fmt.Fprintf(w, "\n<a href='/sendServiceReg/'>Send Request </a>")
 }
 
 func registerService(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 
-	registerServiceToSR()
+	//registerServiceToSR()
 }
 
-func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
+/*
+func registerServiceToSR( /*srg r.ServiceRegReq /* ) {
 
 	var regreply *q.RegistrationReply = &q.RegistrationReply{}
 
@@ -74,16 +71,16 @@ func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 		ProviderSystemVar: q.ProviderSystemReg{
 			SystemName:         "bb",
 			Address:            "cc",
-			Port:               222,
+			Port:               8091,
 			AuthenticationInfo: "dd",
 		},
 		ServiceUri:    "ee",
 		EndOfValidity: "ff",
 		Secure:        "gg",
 		Metadata: []string{
-			"metadata1",
-			"metadata2",
-			"metadata3",
+			"Thermometer",
+			"Celsius",
+			"Indoors",
 			"metadata4",
 		},
 
@@ -101,3 +98,4 @@ func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 
 	regreply.UnmarshalPrint(client, resp, err)
 }
+*/
