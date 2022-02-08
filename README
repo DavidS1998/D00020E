@@ -1,0 +1,2 @@
+Run all from root:
+go run thermometer/thermometer.go & go run valve/valve.go & go run thermostat/thermostat.go &

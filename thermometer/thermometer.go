@@ -24,7 +24,7 @@ func main() {
 
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
+	fmt.Fprintf(w, fmt.Sprintf("%.2f", readTemperature("28-00000dee453b")))
 }
 
 // Sends a command to a bash script that forwards the value
@@ -51,8 +51,8 @@ func readTemperature(sensorID string) float64 {
 
 // Register service Service Registry
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
-	fmt.Fprintf(w, "\n<a href='/sendServiceReg/'>Send Request </a>")
+	fmt.Fprintf(w, "<a href='/get/'>GET</a>\n")
+	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 }
 
 func registerService(w http.ResponseWriter, req *http.Request) {

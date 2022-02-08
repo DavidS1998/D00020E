@@ -80,8 +80,9 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 // Sends a command to a bash script that forwards the value
 // argument to a Python script to turn the servo
 func runPythonScript(value int) {
-	out, err := exec.Command("/bin/sh", "runscript.sh", strconv.Itoa(value)).Output()
+	out, err := exec.Command("/bin/sh", "valve/runscript.sh", strconv.Itoa(value)).Output()
 	if err != nil {
+		fmt.Println("Python fail")
 		log.Fatal(err)
 	}
 
