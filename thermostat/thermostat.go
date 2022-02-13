@@ -39,6 +39,7 @@ func main() {
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/set/", setValve)
+	go http.HandleFunc("/sendRequest", getServices)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8090", nil); err != nil {
@@ -70,6 +71,8 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
+	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, "<a href='/sendRequest/'>Send Req </a>")
 	fmt.Fprintf(w, "<br>")
 
 	// Handy links to the other services
@@ -165,6 +168,10 @@ func getFromService(addr string, port string, subpage string) string {
 	}
 
 	return value
+}
+
+func getServices(w http.ResponseWriter, rep *http.Request) {
+	//requestServiceFromOrchestrator()
 }
 
 func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
