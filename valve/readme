@@ -1,0 +1,8 @@
+För att kunna använda servo filen behöver du installera detta pakatet och det gör du via terminal 
+"$ go get -u github.com/cgxeiji/servo". 
+
+Du behöver även installera pi-blaster och informationen finns här:
+https://githubhelp.com/ryupold/pi-blaster
+
+Pin som användes här är 11. 
+
