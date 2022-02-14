@@ -13,7 +13,7 @@ const (
 	systemName      string = "Thermometer"
 	systemIpAddress string = "87.96.164.242"
 	systemPort      int    = 8091
-	location        string = "Temperature indoors"
+	location        string = "Indoors"
 	Celsius         string = "Celsius"
 	CurrentVersion  int    = 2
 )
@@ -69,7 +69,7 @@ func readTemperature(sensorID string) float64 {
 	return temperature / 1000.0
 }
 
-// Register service Service Registry
+// Page for manually registering service
 func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/get/'>GET</a>\n")
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
