@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
 	"strings"
 )
@@ -58,25 +59,24 @@ func home(w http.ResponseWriter, req *http.Request) {
 func registerService(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 
-	//registerServiceToSR()
+	registerServiceToSR()
 }
 
-/*
-func registerServiceToSR( /*srg r.ServiceRegReq /* ) {
+func registerServiceToSR( /*srg r.ServiceRegReq*/ ) {
 
 	var regreply *q.RegistrationReply = &q.RegistrationReply{}
 
 	srg := &q.ServiceRegReq{
-		ServiceDefinition: "aa",
+		ServiceDefinition: "Thermometer",
 		ProviderSystemVar: q.ProviderSystemReg{
-			SystemName:         "bb",
-			Address:            "cc",
+			SystemName:         "Raspberry",
+			Address:            "192.168.1.125",
 			Port:               8091,
 			AuthenticationInfo: "dd",
 		},
-		ServiceUri:    "ee",
-		EndOfValidity: "ff",
-		Secure:        "gg",
+		ServiceUri:    "/get/",
+		EndOfValidity: "never",
+		Secure:        "no",
 		Metadata: []string{
 			"Thermometer",
 			"Celsius",
@@ -98,4 +98,3 @@ func registerServiceToSR( /*srg r.ServiceRegReq /* ) {
 
 	regreply.UnmarshalPrint(client, resp, err)
 }
-*/

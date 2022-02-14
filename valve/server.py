@@ -5,17 +5,17 @@ import RPi.GPIO as GPIO
 import sys
 from time import sleep
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(32, GPIO.OUT)
-pwm=GPIO.PWM(32, 50)
+GPIO.setup(23, GPIO.OUT)
+pwm=GPIO.PWM(23, 50)
 
 pwm.start(0)
 
 def SetAngle(angle):
         duty= angle / 18 + 2
-        GPIO.output(32, True)
+        GPIO.output(23, True)
         pwm.ChangeDutyCycle(duty)
         sleep(1)
-        GPIO.output(32, False)
+        GPIO.output(23, False)
         pwm.ChangeDutyCycle(0)
         print("PYTHON: Successfully turned servo to " + str(angle) + " degrees")
 

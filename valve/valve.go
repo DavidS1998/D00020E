@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"strconv"
+
+	"github.com/cgxeiji/servo"
 )
 
 type ValveData struct {
@@ -20,7 +21,7 @@ func main() {
 	fmt.Println("Initializing valve system on port 8092")
 
 	// Turns the servo to a default position when initialized
-	runPythonScript(servoPosition)
+	turnServo(servoPosition)
 
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/turn/", adjustServo)
@@ -70,24 +71,62 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 
 	// Update physical position
 	fmt.Println("VALVE: Turning servo " + strconv.Itoa(v.Degrees) + " degrees to position " + strconv.Itoa(servoPosition))
-	runPythonScript(servoPosition)
+	turnServo(servoPosition)
 
 	// Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
 	return
 }
 
-// Sends a command to a bash script that forwards the value
-// argument to a Python script to turn the servo
-func runPythonScript(value int) {
-	out, err := exec.Command("/bin/sh", "valve/runscript.sh", strconv.Itoa(value)).Output()
+func initServo() {
+
+}
+
+func turnServo(value int) {
+	// Use servo.Close() to close the connection of all servos and pi-blaster.
+	defer servo.Close()
+
+	// If you want to move the servos, make sure that pi-blaster is running.
+	// For example, start pi-blaster as:
+	// $ sudo pi-blaster --gpio 14 --pcm
+
+	// Create a new servo connected to gpio 14.
+	myServo := servo.New(11)
+	// (optional) Initialize the servo with your preferred values.
+	// myServo.Flags = servo.Normalized | servo.Centered
+	myServo.MinPulse = 0.05 // Set the minimum pwm pulse width (default: 0.05).
+	myServo.MaxPulse = 0.25 // Set the maximum pwm pulse width (default: 0.25).
+	//myServo.SetPosition(90) // Set the initial position to 90 degrees.
+	myServo.SetSpeed(0.2) // Set the speed to 20% (default: 1.0).
+	// NOTE: The maximum speed of the servo is 0.19s/60degrees.
+	// (optional) Set a verbose name.
+	myServo.Name = "My Servo"
+
+	// Print the information of the servo.
+	fmt.Println(myServo)
+
+	// Connect the servo to the daemon.
+	err := myServo.Connect()
 	if err != nil {
-		fmt.Println("Python fail")
 		log.Fatal(err)
 	}
 
-	// The Python script will return the following byte array
-	fmt.Println(string([]byte(out)))
+	// (optional) Use myServo.Close() to close the connection to a specific
+	// servo. You still need to close the connection to pi-blaster with
+	// `servo.Close()`.
+	defer myServo.Close()
+
+	myServo.SetSpeed(0.5) // Set the speed to half. This is concurrent-safe.
+	//myServo.MoveTo(180)   // This is a non-blocking call.
+
+	/* do some work */
+
+	//myServo.Wait() // Call Wait() to sync with the servo.
+
+	// MoveTo() returns a Waiter interface that can be used to move and wait on
+	// the same line.
+	var floatValue = float64(value)
+	myServo.MoveTo(floatValue).Wait() // This is a blocking call.
 }
 
 // Register IP and port data to the Service Registry
