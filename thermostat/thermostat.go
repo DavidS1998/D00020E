@@ -161,6 +161,29 @@ func sendToValve(degrees int) {
 	thermostatClient.CloseIdleConnections()
 }
 
+// Sends a GET request to a service
+// Will be formatted as ADDR:PORT/SUBPAGE/
+func getFromService(addr string, port string, subpage string) string {
+	// Tries connecting to the thermometer service
+	resp, err := http.Get(addr + port + "/" + subpage + "/")
+	if err != nil {
+		fmt.Printf(err.Error())
+		return "SERVICE UNAVAILABLE<br>"
+		//panic(err)
+	}
+	defer resp.Body.Close()
+
+	// Variable to store the temperature in
+	var value = ""
+	// Scans and prints the input
+	scanner := bufio.NewScanner(resp.Body)
+	for i := 0; scanner.Scan() && i < 5; i++ {
+		value = scanner.Text()
+	}
+
+	return value
+}
+
 // Gets the IP and port address of the thermometer
 func connectThermometer(w http.ResponseWriter, req *http.Request) {
 	// getServices()
@@ -187,29 +210,6 @@ func disconnectServices(w http.ResponseWriter, req *http.Request) {
 	valveServiceAddress = ""
 	valveServicePort = ""
 	http.Redirect(w, req, "/", http.StatusSeeOther)
-}
-
-// Sends a GET request to a service
-// Will be formatted as ADDR:PORT/SUBPAGE/
-func getFromService(addr string, port string, subpage string) string {
-	// Tries connecting to the thermometer service
-	resp, err := http.Get(addr + port + "/" + subpage + "/")
-	if err != nil {
-		fmt.Printf(err.Error())
-		return "!!Service unavailable!!<br>"
-		//panic(err)
-	}
-	defer resp.Body.Close()
-
-	// Variable to store the temperature in
-	var value = ""
-	// Scans and prints the input
-	scanner := bufio.NewScanner(resp.Body)
-	for i := 0; scanner.Scan() && i < 5; i++ {
-		value = scanner.Text()
-	}
-
-	return value
 }
 
 func getServices(w http.ResponseWriter, rep *http.Request) {
