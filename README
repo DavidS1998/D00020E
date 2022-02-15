@@ -1,0 +1,10 @@
+cd ~/ApplicationSystem
+go run thermometer/thermometer.go & 
+go run valve/valve.go & 
+go run thermostat/thermostat.go &
+
+cd ~/Orchestrator/D0020E/
+go run main.go &
+
+cd ~/ServiceRegistry/Arrowhead/
+go *.go &

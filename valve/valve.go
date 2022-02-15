@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"strconv"
+	"time"
+
+	"github.com/cgxeiji/servo"
 )
 
 type ValveData struct {
@@ -15,16 +17,18 @@ type ValveData struct {
 
 // Can have a position between 0-180 degrees
 var servoPosition = 90
+var myServo *servo.Servo
 
 func main() {
 	fmt.Println("Initializing valve system on port 8092")
 
 	// Turns the servo to a default position when initialized
-	runPythonScript(servoPosition)
+	myServo = initServo()
+	turnServo(servoPosition)
 
 	go http.HandleFunc("/", home)
-	go http.HandleFunc("/turn/", adjustServo)
-	go http.HandleFunc("/get/", getPosition)
+	go http.HandleFunc("/turn/", readTurnCommand)
+	go http.HandleFunc("/get/", getCurrentPosition)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8092", nil); err != nil {
@@ -32,7 +36,7 @@ func main() {
 	}
 }
 
-// Prints out servo position data
+// Prints out user-facing servo position data
 func home(w http.ResponseWriter, req *http.Request) {
 	// Calculate percentage between current and max position (180 degrees)
 	var max = 180.0
@@ -43,12 +47,12 @@ func home(w http.ResponseWriter, req *http.Request) {
 }
 
 // Used with GET requests to get current position
-func getPosition(w http.ResponseWriter, req *http.Request) {
+func getCurrentPosition(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, strconv.Itoa(servoPosition))
 }
 
 // Decodes the position data and normalizes it to a possible range (0-180)
-func adjustServo(w http.ResponseWriter, req *http.Request) {
+func readTurnCommand(w http.ResponseWriter, req *http.Request) {
 	// Decode JSON and get Degrees
 	var v ValveData
 	err := json.NewDecoder(req.Body).Decode(&v)
@@ -70,23 +74,32 @@ func adjustServo(w http.ResponseWriter, req *http.Request) {
 
 	// Update physical position
 	fmt.Println("VALVE: Turning servo " + strconv.Itoa(v.Degrees) + " degrees to position " + strconv.Itoa(servoPosition))
-	runPythonScript(servoPosition)
+	turnServo(servoPosition)
 
 	// Automatically redirects to home
 	http.Redirect(w, req, "/", http.StatusSeeOther)
-	return
 }
 
-// Sends a command to a bash script that forwards the value
-// argument to a Python script to turn the servo
-func runPythonScript(value int) {
-	out, err := exec.Command("/bin/sh", "runscript.sh", strconv.Itoa(value)).Output()
+// Initializes the servo on GPIO-11 and connects it to the Pi-blaster daemon service
+func initServo() *servo.Servo {
+	newServo := servo.New(11)
+	fmt.Println(newServo)
+
+	// Connect the servo to the daemon.
+	err := newServo.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
+	return newServo
+}
 
-	// The Python script will return the following byte array
-	fmt.Println(string([]byte(out)))
+// Turns the saved servo to x position
+func turnServo(value int) {
+	var floatValue = float64(value)
+
+	// Blocking call
+	myServo.MoveTo(floatValue).Wait()
+	time.Sleep(time.Second * 1)
 }
 
 // Register IP and port data to the Service Registry

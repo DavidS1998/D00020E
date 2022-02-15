@@ -3,8 +3,10 @@ package queryform
 import "strconv"
 
 // The Fill Registration Form function fills out the form structure that is used when registering a service
-func FillRegistrationForm(system System, service Service) ServiceRegReq {
-	var form ServiceRegReq
+func FillRegistrationForm(system *System, service *Service) *ServiceRegReq {
+
+	var form *ServiceRegReq = &ServiceRegReq{}
+
 	form.ServiceDefinition = service.ServiceDefinition
 	form.ProviderSystemVar.SystemName = system.SystemName
 	form.ProviderSystemVar.Address = system.Address

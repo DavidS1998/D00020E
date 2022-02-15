@@ -3,18 +3,39 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
 	"strings"
 )
 
+const (
+	systemName     string = "Thermometer"
+	systemPort     int    = 8091
+	location       string = "Indoors"
+	Celsius        string = "Celsius"
+	CurrentVersion int    = 2
+)
+
+var (
+	systemIpAddress string = ""
+
+	TempratureServiceDefinition string = "Get temperature"
+	TemperatureServiceName      string = "getTemperature"
+	TemperatureServicePath      string = "/get/"
+	TemperatureMetadata         []string
+	TemperatureSensorID         string
+)
+
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
+	setLocalIP()
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/get/", getTemperature)
-	go http.HandleFunc("/sendServiceReg/", registerService)
+	go http.HandleFunc("/sendServiceReg/", registerServices)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8091", nil); err != nil {
@@ -22,9 +43,15 @@ func main() {
 	}
 }
 
+// Page for manually registering service
+func home(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "<a href='/get/'>GET</a><br>")
+	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a><br>")
+}
+
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
+	fmt.Fprintf(w, fmt.Sprintf("%.2f", readTemperature("28-00000dee453b")))
 }
 
 // Sends a command to a bash script that forwards the value
@@ -46,56 +73,62 @@ func readTemperature(sensorID string) float64 {
 	if err != nil {
 		return 9999.9
 	}
+	TemperatureSensorID = sensorID
+
 	return temperature / 1000.0
 }
 
-// Register service Service Registry
-func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
-	fmt.Fprintf(w, "\n<a href='/sendServiceReg/'>Send Request </a>")
+// Used to find this system's networking addresses
+func setLocalIP() {
+	addrs, _ := net.InterfaceAddrs()
+
+	// 0 is loopback, 1 is IPv4
+	var IPv4 = addrs[1].String()
+	IPv4 = strings.Split(IPv4, "/")[0]
+
+	fmt.Printf("\n Running on local address " + IPv4 + ":" + strconv.Itoa(systemPort))
+
+	systemIpAddress = IPv4
 }
 
-func registerService(w http.ResponseWriter, req *http.Request) {
+func registerServices(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
 
-	//registerServiceToSR()
+	var system *q.System = &q.System{}
+	var service *q.Service = &q.Service{}
+
+	provideThermometerSystemSpecs(system)
+	provideThermometerServiceSpecs(service)
+
+	registerServiceToSR(q.FillRegistrationForm(system, service))
 }
 
-/*
-func registerServiceToSR( /*srg r.ServiceRegReq /* ) {
+func registerServiceToSR(srg *q.ServiceRegReq) {
 
 	var regreply *q.RegistrationReply = &q.RegistrationReply{}
-
-	srg := &q.ServiceRegReq{
-		ServiceDefinition: "aa",
-		ProviderSystemVar: q.ProviderSystemReg{
-			SystemName:         "bb",
-			Address:            "cc",
-			Port:               8091,
-			AuthenticationInfo: "dd",
-		},
-		ServiceUri:    "ee",
-		EndOfValidity: "ff",
-		Secure:        "gg",
-		Metadata: []string{
-			"Thermometer",
-			"Celsius",
-			"Indoors",
-			"metadata4",
-		},
-
-		Version: 33,
-		Interfaces: []string{
-			"Interface1",
-			"Interface2",
-			"Interface3",
-			"Interface4",
-		},
-	}
 
 	// When calling a method you have to call it from the interface-name first
 	client, resp, err := srg.Send()
 
 	regreply.UnmarshalPrint(client, resp, err)
 }
-*/
+
+func provideThermometerSystemSpecs(system *q.System) {
+
+	system.SystemName = systemName
+	system.Address = systemIpAddress
+	system.Port = systemPort
+	system.Authenication = ""
+	system.Protocol = nil
+
+}
+
+func provideThermometerServiceSpecs(service *q.Service) {
+
+	service.ServiceDefinition = TempratureServiceDefinition
+	service.ServiceName = TemperatureServiceName
+	service.Path = TemperatureServicePath
+	service.Metadata = append(service.Metadata, TemperatureSensorID, location, Celsius)
+	service.Version = CurrentVersion
+
+}
