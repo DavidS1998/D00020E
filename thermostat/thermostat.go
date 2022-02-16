@@ -12,10 +12,10 @@ import (
 	"text/template"
 )
 
-// TODO: This data should be requested from the Service Registry in the future
-var thermometerServiceAddress = "http://localhost:"
+// This data is to be requested from the Service Registry
+var thermometerServiceAddress = "http://87.96.164.242:"
 var thermometerServicePort = "8091"
-var valveServiceAddress = "http://localhost:"
+var valveServiceAddress = "http://87.96.164.242:"
 var valveServicePort = "8092"
 
 type ClientInfo struct {
@@ -49,7 +49,6 @@ func main() {
 
 }
 
-//
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "get"))
@@ -58,13 +57,15 @@ func home(w http.ResponseWriter, req *http.Request) {
 	var max = 180.0
 	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "get")
 
+	fmt.Fprintf(w, "\n<p>Current radius: </p>")
+
 	// Parse float from output
 	if s, err := strconv.ParseFloat(currentPosition, 64); err != nil {
 		fmt.Println("Invalid input")
 	} else {
 		// Percent-based representation of the servo's position
 		var percentage = ((float64(s) / max) * 100)
-		fmt.Fprintf(w, "\n<p>Current radius: </p>"+fmt.Sprintf("%.0f", percentage)+"%%, ")
+		fmt.Fprintf(w, fmt.Sprintf("%.0f", percentage)+"%%, ")
 	}
 
 	// Angle-based representation of the servo's position
@@ -79,12 +80,9 @@ func home(w http.ResponseWriter, req *http.Request) {
 
 	// Handy links to the other services
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://localhost:8091/'>Thermometer </a>")
-	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
+
 }
 
-// TODO: comment
 func initClient() {
 
 	ci = &ClientInfo{
@@ -125,13 +123,15 @@ func sendToValve(degrees int) {
 
 	json, err := json.Marshal(v)
 	if err != nil {
-		panic(err)
+		return
+		//panic(err)
 	}
 
 	// Set the HTTP method, url and request body
 	req, err := http.NewRequest(http.MethodPut, valveServiceAddress+valveServicePort+"/turn/", bytes.NewBuffer(json))
 	if err != nil {
-		panic(err)
+		return
+		//panic(err)
 	}
 	defer req.Body.Close()
 
@@ -141,7 +141,8 @@ func sendToValve(degrees int) {
 	// Sends the request, and waits for the response
 	resp, err := thermostatClient.Do(req)
 	if err != nil {
-		panic(err)
+		return
+		//panic(err)
 	}
 	defer resp.Body.Close()
 	fmt.Println("Received response: ", resp.StatusCode)
@@ -157,7 +158,9 @@ func getFromService(addr string, port string, subpage string) string {
 	// Tries connecting to the thermometer service
 	resp, err := http.Get(addr + port + "/" + subpage + "/")
 	if err != nil {
-		panic(err)
+		fmt.Printf(err.Error())
+		return "SERVICE UNAVAILABLE<br>"
+		//panic(err)
 	}
 	defer resp.Body.Close()
 
@@ -181,14 +184,13 @@ func requestService(w http.ResponseWriter, r *http.Request) {
 		// Writes the form to the object (second parameter) and writes it to w
 		t.Execute(w, nil)
 	} else {
+
 		r.ParseForm()
 
 		fmt.Println("Service:", r.Form["service"][0])
 
 		var s *q.ServiceRequestForm = &q.ServiceRequestForm{}
 		s.RequestedService.ServiceDefinitionRequirement = r.Form["service"][0]
-		fmt.Println(s.RequestedService.ServiceDefinitionRequirement)
-
 		requestServiceFromOrchestrator(s)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -204,6 +206,5 @@ func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 
 }
 
-// Requests the networking info for requested services
 /* func requestServiceFromSR() {
 } */
