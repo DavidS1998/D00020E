@@ -57,10 +57,10 @@ func (serviceReq *ServiceRequestForm) Send() (*http.Client, *http.Response, erro
 	}
 	fmt.Println("Payload printed: ", string(payload))
 
-	serviceRegistryURL := "?"
+	serviceOrchestrationURL := "http://localhost:4000/Orc"
 
 	// Set the HTTP POST method, url and request body
-	req, err := http.NewRequest(http.MethodPost, serviceRegistryURL, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodPost, serviceOrchestrationURL, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println(err)
 
@@ -114,19 +114,19 @@ func (regreply *RegistrationReply) UnmarshalPrint(client *http.Client, resp *htt
 func (serviceQueryListReply *OrchestrationResponse) UnmarshalPrint(client *http.Client, resp *http.Response, err error) {
 
 	if err != nil {
-		log.Println(err)
+		log.Println(err.Error())
 	} else {
 		log.Println("Response status: ", resp.Status)
 		log.Println("Response header: ", resp.Header)
 
 		body, readErr := ioutil.ReadAll(resp.Body)
 		if readErr != nil {
-			log.Println(readErr)
+			log.Println(readErr.Error())
 		} else {
 			log.Println("Response boyd: ", string(body))
 			err := json.Unmarshal(body, serviceQueryListReply)
 			if err != nil {
-				log.Println("Unmarshal body error: ", err)
+				log.Println("Unmarshal body error: ", err.Error())
 			} else {
 				fmt.Println("Unmarshal body ok: ", *serviceQueryListReply)
 			}

@@ -31,8 +31,8 @@ func main() {
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
-	go http.HandleFunc("/get/", getTemperature)
-	go http.HandleFunc("/sendServiceReg/", registerServices)
+	go http.HandleFunc("/Thermometer/get/", getTemperature)
+	go http.HandleFunc("/Thermometer/sendServiceReg/", registerServices)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8091", nil); err != nil {
@@ -71,12 +71,12 @@ func readTemperature(sensorID string) float64 {
 
 // Register service Service Registry
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
-	fmt.Fprintf(w, "\n<a href='/sendServiceReg/'>Send registration request of services</a>")
+	//fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
+	fmt.Fprintf(w, "\n<a href='/Thermometer/sendServiceReg/'>Send registration request of services</a>")
 }
 
 func registerServices(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
+	fmt.Fprintf(w, "<a href='/Thermometer/sendServiceReg/'>Send Request </a>")
 
 	var system *q.System = &q.System{}
 	var service *q.Service = &q.Service{}

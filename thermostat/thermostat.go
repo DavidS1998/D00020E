@@ -9,12 +9,13 @@ import (
 	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 // TODO: This data should be requested from the Service Registry in the future
-var thermometerServiceAddress = "http://87.96.164.242:"
+var thermometerServiceAddress = "http://localhost:"
 var thermometerServicePort = "8091"
-var valveServiceAddress = "http://87.96.164.242:"
+var valveServiceAddress = "http://localhost:"
 var valveServicePort = "8092"
 
 type ClientInfo struct {
@@ -39,7 +40,7 @@ func main() {
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/set/", setValve)
-	go http.HandleFunc("/sendRequest", getServices)
+	go http.HandleFunc("/requestServices/", requestService)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8090", nil); err != nil {
@@ -73,14 +74,14 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='/sendRequest/'>Send Req </a>")
+	fmt.Fprintf(w, "<a href='/requestServices/'>Request service</a>")
 	fmt.Fprintf(w, "<br>")
 
 	// Handy links to the other services
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://87.96.164.242:8091/'>Thermometer </a>")
+	fmt.Fprintf(w, "<a href='http://localhost:8091/'>Thermometer </a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://87.96.164.242:8092/'>Valve</a>")
+	fmt.Fprintf(w, "<a href='http://localhost:8092/'>Valve</a>")
 }
 
 // TODO: comment
@@ -171,8 +172,27 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
-func getServices(w http.ResponseWriter, rep *http.Request) {
-	//requestServiceFromOrchestrator()
+func requestService(w http.ResponseWriter, r *http.Request) {
+
+	// When we enter this URL path "/"
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("form.gtpl")
+
+		// Writes the form to the object (second parameter) and writes it to w
+		t.Execute(w, nil)
+	} else {
+		r.ParseForm()
+
+		fmt.Println("Service:", r.Form["service"][0])
+
+		var s *q.ServiceRequestForm = &q.ServiceRequestForm{}
+		s.RequestedService.ServiceDefinitionRequirement = r.Form["service"][0]
+		fmt.Println(s.RequestedService.ServiceDefinitionRequirement)
+
+		requestServiceFromOrchestrator(s)
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
 }
 
 func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
