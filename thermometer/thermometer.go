@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
@@ -10,15 +11,16 @@ import (
 )
 
 const (
-	systemName      string = "Thermometer"
-	systemIpAddress string = "87.96.164.242"
-	systemPort      int    = 8091
-	indoor          string = "Temperature indoors"
-	Celsius         string = "Celsius"
-	CurrentVersion  int    = 2
+	systemName     string = "Thermometer"
+	systemPort     int    = 8091
+	location       string = "Indoors"
+	Celsius        string = "Celsius"
+	CurrentVersion int    = 2
 )
 
 var (
+	systemIpAddress string = ""
+
 	TempratureServiceDefinition string = "Get temperature"
 	TemperatureServiceName      string = "getTemperature"
 	TemperatureServicePath      string = "/get/"
@@ -28,6 +30,7 @@ var (
 
 func main() {
 	fmt.Println("Initializing thermometer system on port 8091")
+	setLocalIP()
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
@@ -40,9 +43,15 @@ func main() {
 	}
 }
 
+// Page for manually registering service
+func home(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "<a href='/get/'>GET</a><br>")
+	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a><br>")
+}
+
 // Home page that includes a link to a subpage
 func getTemperature(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
+	fmt.Fprintf(w, fmt.Sprintf("%.2f", readTemperature("28-00000dee453b")))
 }
 
 // Sends a command to a bash script that forwards the value
@@ -69,10 +78,17 @@ func readTemperature(sensorID string) float64 {
 	return temperature / 1000.0
 }
 
-// Register service Service Registry
-func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, fmt.Sprintf("%.1f", readTemperature("28-00000dee453b")))
-	fmt.Fprintf(w, "\n<a href='/sendServiceReg/'>Send registration request of services</a>")
+// Used to find this system's networking addresses
+func setLocalIP() {
+	addrs, _ := net.InterfaceAddrs()
+
+	// 0 is loopback, 1 is IPv4
+	var IPv4 = addrs[1].String()
+	IPv4 = strings.Split(IPv4, "/")[0]
+
+	fmt.Printf("\n Running on local address " + IPv4 + ":" + strconv.Itoa(systemPort))
+
+	systemIpAddress = IPv4
 }
 
 func registerServices(w http.ResponseWriter, req *http.Request) {
@@ -112,7 +128,7 @@ func provideThermometerServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = TempratureServiceDefinition
 	service.ServiceName = TemperatureServiceName
 	service.Path = TemperatureServicePath
-	service.Metadata = append(service.Metadata, TemperatureSensorID, indoor, Celsius)
+	service.Metadata = append(service.Metadata, TemperatureSensorID, location, Celsius)
 	service.Version = CurrentVersion
 
 }
