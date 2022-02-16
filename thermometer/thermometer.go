@@ -45,8 +45,8 @@ func main() {
 
 // Page for manually registering service
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<a href='/get/'>GET</a><br>")
-	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a><br>")
+	fmt.Fprintf(w, "<a href='/Thermometer/get/'>GET</a><br>")
+	fmt.Fprintf(w, "<a href='/Thermometer/sendServiceReg/'>Send Request </a><br>")
 }
 
 // Home page that includes a link to a subpage

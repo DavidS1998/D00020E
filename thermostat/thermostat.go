@@ -51,11 +51,11 @@ func main() {
 
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "get"))
+	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get"))
 
 	// Variables to help present data in a clearer way (Percent, degrees of total)
 	var max = 180.0
-	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "get")
+	var currentPosition = getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get")
 
 	fmt.Fprintf(w, "\n<p>Current radius: </p>")
 
@@ -69,7 +69,7 @@ func home(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Angle-based representation of the servo's position
-	fmt.Fprintf(w, "\n"+getFromService(valveServiceAddress, valveServicePort, "get")+"°/180°")
+	fmt.Fprintf(w, "\n"+getFromService(valveServiceAddress, valveServicePort, "Valve/get")+"°/180°")
 	fmt.Fprintf(w, "\n<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
