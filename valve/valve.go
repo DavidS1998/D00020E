@@ -27,8 +27,8 @@ func main() {
 	turnServo(servoPosition)
 
 	go http.HandleFunc("/", home)
-	go http.HandleFunc("/turn/", readTurnCommand)
-	go http.HandleFunc("/get/", getCurrentPosition)
+	go http.HandleFunc("/Valve/turn/", readTurnCommand)
+	go http.HandleFunc("/Valve/get/", getCurrentPosition)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8092", nil); err != nil {
@@ -104,5 +104,4 @@ func turnServo(value int) {
 
 // Register IP and port data to the Service Registry
 /* func registerServiceToSR() {
-
 } */

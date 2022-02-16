@@ -9,13 +9,14 @@ import (
 	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 // This data is to be requested from the Service Registry
-var thermometerServiceAddress = ""
-var thermometerServicePort = ""
-var valveServiceAddress = ""
-var valveServicePort = ""
+var thermometerServiceAddress = "http://87.96.164.242:"
+var thermometerServicePort = "8091"
+var valveServiceAddress = "http://87.96.164.242:"
+var valveServicePort = "8092"
 
 type ClientInfo struct {
 	ClientName   string
@@ -38,12 +39,8 @@ func main() {
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
-	go http.HandleFunc("/set/", readSetCommand)
-	go http.HandleFunc("/sendRequest/", getServices)
-
-	go http.HandleFunc("/connectThermometer/", connectThermometer)
-	go http.HandleFunc("/connectValve/", connectValve)
-	go http.HandleFunc("/disconnect/", disconnectServices)
+	go http.HandleFunc("/set/", setValve)
+	go http.HandleFunc("/requestServices/", requestService)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8090", nil); err != nil {
@@ -54,11 +51,11 @@ func main() {
 
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "get"))
+	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get"))
 
 	// Variables to help present data in a clearer way (Percent, degrees of total)
 	var max = 180.0
-	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "get")
+	var currentPosition = getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get")
 
 	fmt.Fprintf(w, "\n<p>Current radius: </p>")
 
@@ -72,24 +69,18 @@ func home(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Angle-based representation of the servo's position
-	fmt.Fprintf(w, "\n"+getFromService(valveServiceAddress, valveServicePort, "get")+"°/180°")
+	fmt.Fprintf(w, "\n"+getFromService(valveServiceAddress, valveServicePort, "Valve/get")+"°/180°")
 	fmt.Fprintf(w, "\n<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(30)+"'>Turn +30° </a>")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, "<a href='/set/"+strconv.Itoa(-30)+"'>Turn -30° </a>")
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='/sendRequest/'>Send Req </a>")
+	fmt.Fprintf(w, "<a href='/requestServices/'>Request service</a>")
 	fmt.Fprintf(w, "<br>")
 
 	// Handy links to the other services
 	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://87.96.164.242:8091/'>Thermometer </a>")
-	fmt.Fprintf(w, "<a href='/connectThermometer/'> CONNECT</a>")
-	fmt.Fprintf(w, "<br>")
-	fmt.Fprintf(w, "<a href='http://87.96.164.242:8092/'>Valve</a>")
-	fmt.Fprintf(w, "<a href='/connectValve/'> CONNECT</a>")
 
-	fmt.Fprintf(w, "<br><a href='/disconnect/'> DISCONNECT ALL</a>")
 }
 
 func initClient() {
@@ -105,7 +96,7 @@ func initClient() {
 // Gets how much to turn the servo with, and forwards the
 // formatted data as a query
 // URL to get data from: localhost:8090/set/##
-func readSetCommand(w http.ResponseWriter, req *http.Request) {
+func setValve(w http.ResponseWriter, req *http.Request) {
 	// Reads the value after /set/###
 	path := strings.Split(req.URL.Path, "/")
 	last := path[len(path)-1]
@@ -184,36 +175,26 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
-// Gets the IP and port address of the thermometer
-func connectThermometer(w http.ResponseWriter, req *http.Request) {
-	// getServices()
-	fmt.Printf("Thermometer service data requested")
-	thermometerServiceAddress = "http://87.96.164.242:"
-	thermometerServicePort = "8091"
-	http.Redirect(w, req, "/", http.StatusSeeOther)
-}
+func requestService(w http.ResponseWriter, r *http.Request) {
 
-// Gets the IP and port address of the valve
-func connectValve(w http.ResponseWriter, req *http.Request) {
-	// getServices()
-	fmt.Printf("Valve service data requested")
-	valveServiceAddress = "http://87.96.164.242:"
-	valveServicePort = "8092"
-	http.Redirect(w, req, "/", http.StatusSeeOther)
-}
+	// When we enter this URL path "/"
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("form.gtpl")
 
-// Removes stored data on services
-func disconnectServices(w http.ResponseWriter, req *http.Request) {
-	fmt.Printf("Discarding all service data")
-	thermometerServiceAddress = ""
-	thermometerServicePort = ""
-	valveServiceAddress = ""
-	valveServicePort = ""
-	http.Redirect(w, req, "/", http.StatusSeeOther)
-}
+		// Writes the form to the object (second parameter) and writes it to w
+		t.Execute(w, nil)
+	} else {
 
-func getServices(w http.ResponseWriter, rep *http.Request) {
-	//requestServiceFromOrchestrator()
+		r.ParseForm()
+
+		fmt.Println("Service:", r.Form["service"][0])
+
+		var s *q.ServiceRequestForm = &q.ServiceRequestForm{}
+		s.RequestedService.ServiceDefinitionRequirement = r.Form["service"][0]
+		requestServiceFromOrchestrator(s)
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
 }
 
 func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {

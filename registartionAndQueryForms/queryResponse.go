@@ -41,7 +41,7 @@ type Response struct {
 	Service             service             `json:"service"`
 	ServiceURI          string              `json:"serviceUri"`
 	Secure              string              `json:"secure"`
-	Metadata            Metadata            `json:"metadata"`
+	Metadata            []string            `json:"metadata"`
 	Interfaces          []interfaces        `json:"interfaces"`
 	Version             int                 `json:"version"`
 	AuthorizationTokens authorizationTokens `json:"authorizationTokens"`

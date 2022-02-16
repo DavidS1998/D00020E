@@ -34,8 +34,8 @@ func main() {
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
-	go http.HandleFunc("/get/", getTemperature)
-	go http.HandleFunc("/sendServiceReg/", registerServices)
+	go http.HandleFunc("/Thermometer/get/", getTemperature)
+	go http.HandleFunc("/Thermometer/sendServiceReg/", registerServices)
 
 	// Listens for incoming connections
 	if err := http.ListenAndServe(":8091", nil); err != nil {
@@ -45,8 +45,8 @@ func main() {
 
 // Page for manually registering service
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<a href='/get/'>GET</a><br>")
-	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a><br>")
+	fmt.Fprintf(w, "<a href='/Thermometer/get/'>GET</a><br>")
+	fmt.Fprintf(w, "<a href='/Thermometer/sendServiceReg/'>Send Request </a><br>")
 }
 
 // Home page that includes a link to a subpage
@@ -92,7 +92,7 @@ func setLocalIP() {
 }
 
 func registerServices(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
+	fmt.Fprintf(w, "<a href='/Thermometer/sendServiceReg/'>Send Request </a>")
 
 	var system *q.System = &q.System{}
 	var service *q.Service = &q.Service{}
