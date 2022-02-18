@@ -1,43 +1,153 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"strconv"
+	"time"
+
+	q "providerConsumer/registartionAndQueryForms"
 
 	"github.com/cgxeiji/servo"
 )
 
+type ValveData struct {
+	Degrees int
+}
+
+// Can have a position between 0-180 degrees
+var servoPosition = 90
+var myServo *servo.Servo
+
 func main() {
-	// Use servo.Close() to close the connection of all servos and pi-blaster.
-	defer servo.Close()
+	fmt.Println("Initializing valve system on port 8092")
 
-	// Create a new servo connected to gpio 11.
-	myServo := servo.New(11)
+	// Turns the servo to a default position when initialized
+	myServo = initServo()
+	turnServo(servoPosition)
 
-	// (optional) Initialize the servo with your preferred values.
-	myServo.SetPosition(90) // Set the initial position to 90 degrees.
+	go http.HandleFunc("/", home)
+	go http.HandleFunc("/turn/", readTurnCommand)
+	go http.HandleFunc("/get/", getCurrentPosition)
 
-	// (optional) Set a verbose name.
-	myServo.Name = "My Servo"
+	// Listens for incoming connections
+	if err := http.ListenAndServe(":8092", nil); err != nil {
+		panic(err)
+	}
+}
 
-	// Print the information of the servo.
-	fmt.Println(myServo)
+// Prints out user-facing servo position data
+func home(w http.ResponseWriter, req *http.Request) {
+	// Calculate percentage between current and max position (180 degrees)
+	var max = 180.0
+	var percentage = (float64(servoPosition) / max) * 100
+	fmt.Fprintf(w, "<p>Current position: </p>\n"+fmt.Sprintf("%.2f", percentage)+"%%")
+	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, strconv.Itoa(servoPosition)+"°"+"/180°")
+}
+
+// Used with GET requests to get current position
+func getCurrentPosition(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, strconv.Itoa(servoPosition))
+}
+
+// Decodes the position data and normalizes it to a possible range (0-180)
+func readTurnCommand(w http.ResponseWriter, req *http.Request) {
+	// Decode JSON and get Degrees
+	var v ValveData
+	err := json.NewDecoder(req.Body).Decode(&v)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// Update internal position
+	servoPosition += v.Degrees
+
+	// The servo can only be in a position between 0 and 180 degrees.
+	// Furthermore, the Python script responsible for turning the
+	// servo can only handle positive values up to 180 (or it will crash)
+	if servoPosition > 180 {
+		servoPosition = 180
+	} else if servoPosition < 0 {
+		servoPosition = 0
+	}
+
+	// Update physical position
+	fmt.Println("VALVE: Turning servo " + strconv.Itoa(v.Degrees) + " degrees to position " + strconv.Itoa(servoPosition))
+	turnServo(servoPosition)
+
+	// Automatically redirects to home
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}
+
+// Initializes the servo on GPIO-11 and connects it to the Pi-blaster daemon service
+func initServo() *servo.Servo {
+	newServo := servo.New(11)
+	fmt.Println(newServo)
 
 	// Connect the servo to the daemon.
-	err := myServo.Connect()
+	err := newServo.Connect()
 	if err != nil {
 		log.Fatal(err)
 	}
+	return newServo
+}
 
-	// (optional) Use myServo.Close() to close the connection to a specific
-	// servo. You still need to close the connection to pi-blaster with
-	// `servo.Close()`.
-	defer myServo.Close()
+// Turns the saved servo to x position
+func turnServo(value int) {
+	var floatValue = float64(value)
 
-	//move ther servo to 180 degress.
-	myServo.MoveTo(180) // This is a non-blocking call.
+	// Blocking call
+	myServo.MoveTo(floatValue).Wait()
+	time.Sleep(time.Second * 1)
+}
 
-	// MoveTo() returns a Waiter interface that can be used to move and wait on
-	// the same line.
-	myServo.MoveTo(0).Wait() // This is a blocking call.
+// Register IP and port data to the Service Registry
+/* func registerServiceToSR() {
+
+} */
+
+func registerServices(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "<a href='/sendServiceReg/'>Send Request </a>")
+
+	var system *q.System = &q.System{}
+	var service *q.Service = &q.Service{}
+
+	provideThermometerSystemSpecs(system)
+	provideThermometerServiceSpecs(service)
+
+	registerServiceToSR(q.FillRegistrationForm(system, service))
+}
+
+func registerServiceToSR(srg *q.ServiceRegReq) {
+
+	var regreply *q.RegistrationReply = &q.RegistrationReply{}
+
+	// When calling a method you have to call it from the interface-name first
+	client, resp, err := srg.Send()
+
+	regreply.UnmarshalPrint(client, resp, err)
+}
+
+func provideThermometerSystemSpecs(system *q.System) {
+
+	system.SystemName = "Thermometer"
+	system.Address = "Indoors"
+	system.Port = 8091
+	system.Authenication = ""
+	system.Protocol = nil
+
+}
+
+func provideThermometerServiceSpecs(service *q.Service) {
+
+	service.ServiceDefinition = "Get temperature"
+	service.ServiceName = "getTemperature"
+	service.Path = "/get/"
+	//the arguments are not correct, needs to check it
+	service.Metadata = append(service.Metadata, "TemperatureSensorID", "Indoors", "Celsius")
+	service.Version = 2
+
 }
