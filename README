@@ -8,3 +8,11 @@ go run main.go &
 
 cd ~/ServiceRegistry/Arrowhead/
 go *.go &
+
+In this project three different ports are used 8090, 8091 and 8092. Every port has it own responsibility. 
+
+Port 8090 displays the main page where you can see the current temperature, current radius of the servo, adjust valve with 30 degrees and you can request service. 
+
+Port: 8091 display a "Get" link and a "send Request", its a page for manually registering service.
+
+Port: 8092 display the current position of the servo in borth percentage form and decimal form. The servo position can be between 0-180. If the current postion of the servo is 90 it means that the current postion of the servo is 50%. 
