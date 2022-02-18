@@ -58,7 +58,7 @@ func home(w http.ResponseWriter, req *http.Request) {
 
 	// Variables to help present data in a clearer way (Percent, degrees of total)
 	var max = 180.0
-	var currentPosition = getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get")
+	var currentPosition = getFromService(valveServiceAddress, valveServicePort, "Valve/get")
 
 	fmt.Fprintf(w, "\n<p>Current radius: </p>")
 
@@ -111,6 +111,7 @@ func setValve(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// PUT request for turning servo
+	fmt.Println("THERMOSTAT: Request turning " + strconv.Itoa(num))
 	sendToValve(num)
 
 	// Automatically redirect to home
@@ -126,13 +127,15 @@ func sendToValve(degrees int) {
 
 	json, err := json.Marshal(v)
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 		//panic(err)
 	}
 
 	// Set the HTTP method, url and request body
-	req, err := http.NewRequest(http.MethodPut, valveServiceAddress+valveServicePort+"/turn/", bytes.NewBuffer(json))
+	req, err := http.NewRequest(http.MethodPut, valveServiceAddress+valveServicePort+"/Valve/turn/", bytes.NewBuffer(json))
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 		//panic(err)
 	}
@@ -144,6 +147,7 @@ func sendToValve(degrees int) {
 	// Sends the request, and waits for the response
 	resp, err := thermostatClient.Do(req)
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 		//panic(err)
 	}

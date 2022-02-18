@@ -53,6 +53,7 @@ func getCurrentPosition(w http.ResponseWriter, req *http.Request) {
 
 // Decodes the position data and normalizes it to a possible range (0-180)
 func readTurnCommand(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("VALVE: PUT request received")
 	// Decode JSON and get Degrees
 	var v ValveData
 	err := json.NewDecoder(req.Body).Decode(&v)
