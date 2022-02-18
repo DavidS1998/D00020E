@@ -12,6 +12,9 @@ import (
 	"text/template"
 )
 
+// Configure port to run on
+var runOnPort = 8090
+
 // This data is to be requested from the Service Registry
 var thermometerServiceAddress = "http://87.96.164.242:"
 var thermometerServicePort = "8091"
@@ -34,7 +37,7 @@ var (
 
 // Trying comment 3
 func main() {
-	fmt.Println("Initializing thermostat system on port 8090")
+	fmt.Println("Initializing thermostat system on port " + strconv.Itoa(runOnPort))
 	initClient()
 
 	// What to execute for various page requests
@@ -43,7 +46,7 @@ func main() {
 	go http.HandleFunc("/requestServices/", requestService)
 
 	// Listens for incoming connections
-	if err := http.ListenAndServe(":8090", nil); err != nil {
+	if err := http.ListenAndServe(":"+strconv.Itoa(runOnPort)+"", nil); err != nil {
 		panic(err)
 	}
 
