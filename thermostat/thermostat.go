@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	c "providerConsumer/goCache"
 	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // Configure port to run on
@@ -20,6 +22,8 @@ var thermometerServiceAddress = "http://87.96.164.242:"
 var thermometerServicePort = "8091"
 var valveServiceAddress = "http://87.96.164.242:"
 var valveServicePort = "8092"
+
+var nlc *c.LocalCache
 
 type ClientInfo struct {
 	ClientName   string
@@ -40,6 +44,8 @@ func main() {
 	fmt.Println("Initializing thermostat system on port " + strconv.Itoa(runOnPort))
 	initClient()
 
+	nlc = c.NewLocalCache(time.Duration(time.Second * 20))
+
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/set/", setValve)
@@ -54,7 +60,15 @@ func main() {
 
 // Prints out thermostat data, such as current temperature and servo position
 func home(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService(thermometerServiceAddress, thermometerServicePort, "Thermometer/get"))
+	// If provider info exists for the given service "Get temperature" then the a get request is sent to that address
+	if pInfo, ok := nlc.Read("Get temperature"); ok == nil {
+		fmt.Fprintf(w, "<p>Current temperature: </p>"+getFromService("http://"+pInfo.Address, strconv.Itoa(pInfo.Port), pInfo.SystemName+"/get"))
+		fmt.Fprintf(w, "\n<br>")
+	} else {
+		fmt.Fprintf(w, "<p>Current temperature: </p>"+"'Get temperature' not in cache")
+		fmt.Fprintf(w, "\n<br>")
+
+	}
 
 	// Variables to help present data in a clearer way (Percent, degrees of total)
 	var max = 180.0
@@ -211,6 +225,21 @@ func requestServiceFromOrchestrator(serviceReq *q.ServiceRequestForm) {
 	client, resp, err := serviceReq.Send()
 	serviceQueryListReply.UnmarshalPrint(client, resp, err)
 
+	cacheSystemOfRequestedService(serviceQueryListReply)
+}
+
+func cacheSystemOfRequestedService(or *q.OrchestrationResponse) {
+
+	for _, orcResp := range or.Response {
+
+		p := c.ProviderInfo{
+			SystemName: orcResp.Provider.SystemName,
+			Address:    orcResp.Provider.Address + ":",
+			Port:       orcResp.Provider.Port,
+		}
+
+		nlc.Update(orcResp.Service.ServiceDefinition, p, time.Now().Unix())
+	}
 }
 
 /* func requestServiceFromSR() {
