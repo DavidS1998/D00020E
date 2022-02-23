@@ -45,6 +45,7 @@ func main() {
 	initClient()
 
 	nlc = c.NewLocalCache(time.Duration(time.Second * 20))
+	defer nlc.StopCleanup()
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)

@@ -6,23 +6,26 @@ import (
 	"time"
 )
 
+// Provider info struct for storing provider info
 type ProviderInfo struct {
 	SystemName string `json:"systemName"`
 	Address    string `json:"address"`
 	Port       int    `json:"port"`
 }
 
+// CachedProvider is the value in the map
 type CachedProvider struct {
 	ProviderInfo
 	expireAtTimestamp int64
 }
 
+// This will be the cache-object, i.e. it will contain
 type LocalCache struct {
-	Stop chan struct{}
+	Stop chan struct{} //Sending s non-cost signal to stop any chaneling operation
 
-	Wg            sync.WaitGroup
-	Mu            sync.RWMutex
-	SystemService map[string]CachedProvider
+	Wg            sync.WaitGroup            // Waitgroup -> kind of similar to semaphores
+	Mu            sync.RWMutex              // Mutex lock
+	SystemService map[string]CachedProvider // A map to store all service and respective provider information
 }
 
 func NewLocalCache(cleanupInterval time.Duration) *LocalCache {
@@ -32,7 +35,9 @@ func NewLocalCache(cleanupInterval time.Duration) *LocalCache {
 	}
 
 	lc.Wg.Add(1)
+	// Anonymous function which is run by a gorotuine (thread)
 	go func(cleanupInterval time.Duration) {
+		// defer decrementation on the waitgroup once the anonymous function is done executing
 		defer lc.Wg.Done()
 		lc.cleanupLoop(cleanupInterval)
 	}(cleanupInterval)
@@ -41,18 +46,23 @@ func NewLocalCache(cleanupInterval time.Duration) *LocalCache {
 }
 
 func (lc *LocalCache) cleanupLoop(interval time.Duration) {
+
+	// After each interval the ticker will send the time on the channel given to the ticker, this interval is used to do cleanup.
+	// Each interval a message is sent throught the ticker channel (t.C)
 	t := time.NewTicker(interval)
 	defer t.Stop()
 
 	for {
+		//blocks (busy-wait) until there is data available on lc.Stop or t.C
 		select {
 		case <-lc.Stop:
 			return
 		case <-t.C:
 			lc.Mu.Lock()
-			for uid, cu := range lc.SystemService {
-				if cu.expireAtTimestamp <= time.Now().Unix() {
-					delete(lc.SystemService, uid)
+			for service, cp := range lc.SystemService {
+				//Clearing the cache after each interval
+				if cp.expireAtTimestamp <= time.Now().Unix() {
+					delete(lc.SystemService, service)
 				}
 			}
 			lc.Mu.Unlock()
@@ -60,7 +70,8 @@ func (lc *LocalCache) cleanupLoop(interval time.Duration) {
 	}
 }
 
-func (lc *LocalCache) stopCleanup() {
+func (lc *LocalCache) StopCleanup() {
+	//Closes the channel Stop
 	close(lc.Stop)
 	lc.Wg.Wait()
 }
@@ -76,7 +87,7 @@ func (lc *LocalCache) Update(serviceDefinition string, p ProviderInfo, expireAtT
 }
 
 var (
-	errUserNotInCache = errors.New("the user isn't in cache")
+	errServiceNotInCache = errors.New("the Service isn't in cache")
 )
 
 func (lc *LocalCache) Read(serviceDefinition string) (ProviderInfo, error) {
@@ -85,7 +96,7 @@ func (lc *LocalCache) Read(serviceDefinition string) (ProviderInfo, error) {
 
 	cu, ok := lc.SystemService[serviceDefinition]
 	if !ok {
-		return ProviderInfo{}, errUserNotInCache
+		return ProviderInfo{}, errServiceNotInCache
 	}
 
 	return cu.ProviderInfo, nil
