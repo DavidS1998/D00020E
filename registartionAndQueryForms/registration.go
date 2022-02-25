@@ -15,7 +15,7 @@ func FillRegistrationForm(system *System, service *Service) *ServiceRegReq {
 	form.ServiceUri = "http://" + system.Address + ":" + strconv.Itoa(system.Port) + "/" + system.SystemName + service.Path
 	form.EndOfValidity = "tomorrow"
 	form.Secure = "INSECURE"
-	form.Metadata = service.Metadata
+	form.MetadataGo = service.Metadata
 	form.Version = service.Version
 	form.Interfaces = system.Protocol
 	return form
@@ -30,7 +30,7 @@ type ServiceRegReq struct {
 	ServiceUri        string            `json:"serviceURI"`
 	EndOfValidity     string            `json:"endOfValidity"`
 	Secure            string            `json:"secure"`
-	Metadata          []string          `json:"metadata"`
+	MetadataGo        []string          `json:"metadataGo"`
 	Version           int               `json:"version"`
 	Interfaces        []string          `json:"interface"`
 }

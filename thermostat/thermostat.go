@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	c "providerConsumer/goCache"
@@ -36,9 +37,11 @@ var (
 	v                *ValveData
 )
 
+var port = flag.Int("port", 8090, "listen to port")
+
 // Trying comment 3
 func main() {
-	fmt.Println("Initializing thermostat system on port 8090")
+	flag.Parse()
 	initClient()
 
 	nlc = c.NewLocalCache(time.Duration(time.Second * 20))
@@ -47,10 +50,10 @@ func main() {
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/set/", setValve)
-	go http.HandleFunc("/requestServices/", requestService)
+	go http.HandleFunc("/requestServices/", getServiceDefinition)
 
 	// Listens for incoming connections
-	if err := http.ListenAndServe(":8090", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
 		panic(err)
 	}
 
@@ -190,7 +193,7 @@ func getFromService(addr string, port string, subpage string) string {
 	return value
 }
 
-func requestService(w http.ResponseWriter, r *http.Request) {
+func getServiceDefinition(w http.ResponseWriter, r *http.Request) {
 
 	// When we enter this URL path "/"
 	if r.Method == "GET" {
