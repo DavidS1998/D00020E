@@ -2,13 +2,42 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	q "providerConsumer/registartionAndQueryForms"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cgxeiji/servo"
+)
+
+const (
+	systemName     string = "Thermometer"
+	location       string = "Indoors"
+	EntityOfValve  string = "Degrees"
+	CurrentVersion int    = 2
+)
+
+var systemIpAddress string = ""
+
+var port = flag.Int("port", 8092, "listen to port")
+
+var (
+	GetValveServiceDefinition string = "Get valve"
+	GetValveServiceName       string = "getValve"
+	GetValveServicePath       string = "/get/"
+	GetValveMetadata          []string
+
+	TurnValveServiceDefinition string = "Turn valve"
+	TurnValveServiceName       string = "turnValve"
+	TurnValveServicePath       string = "/turn/"
+	TurnValveMetadata          []string
+
+	ValveSensorID string
 )
 
 type ValveData struct {
@@ -20,7 +49,8 @@ var servoPosition = 90
 var myServo *servo.Servo
 
 func main() {
-	fmt.Println("Initializing valve system on port 8092")
+	flag.Parse()
+	setLocalIP(port)
 
 	// Turns the servo to a default position when initialized
 	myServo = initServo()
@@ -29,9 +59,10 @@ func main() {
 	go http.HandleFunc("/", home)
 	go http.HandleFunc("/Valve/turn/", readTurnCommand)
 	go http.HandleFunc("/Valve/get/", getCurrentPosition)
+	go http.HandleFunc("/Valve/sendServiceReg/", registerServices)
 
 	// Listens for incoming connections
-	if err := http.ListenAndServe(":8092", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", strconv.Itoa(*port)), nil); err != nil {
 		panic(err)
 	}
 }
@@ -84,6 +115,7 @@ func readTurnCommand(w http.ResponseWriter, req *http.Request) {
 func initServo() *servo.Servo {
 	newServo := servo.New(11)
 	fmt.Println(newServo)
+	newServo.Name = "servo_ID_1"
 
 	// Connect the servo to the daemon.
 	err := newServo.Connect()
@@ -102,6 +134,73 @@ func turnServo(value int) {
 	time.Sleep(time.Second * 1)
 }
 
-// Register IP and port data to the Service Registry
-/* func registerServiceToSR() {
-} */
+// Used to find this system's networking addresses
+func setLocalIP(port *int) {
+	addrs, _ := net.InterfaceAddrs()
+
+	// 0 is loopback, 1 is IPv4
+	var IPv4 = addrs[1].String()
+	IPv4 = strings.Split(IPv4, "/")[0]
+
+	fmt.Printf("\n Running on local address " + IPv4 + ":" + strconv.Itoa(*port))
+
+	systemIpAddress = IPv4
+}
+
+func registerServices(w http.ResponseWriter, req *http.Request) {
+
+	var system *q.System = &q.System{}
+
+	var serviceGetValve *q.Service = &q.Service{}
+	var serviceTurnValve *q.Service = &q.Service{}
+
+	provideValveSystemSpecs(system)
+
+	provideGetValveServiceSpecs(serviceGetValve)
+	provideTurnValveServiceSpecs(serviceTurnValve)
+
+	registerServiceToSR(q.FillRegistrationForm(system, serviceGetValve))
+	registerServiceToSR(q.FillRegistrationForm(system, serviceTurnValve))
+
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}
+
+func registerServiceToSR(srg *q.ServiceRegReq) {
+
+	var regreply *q.RegistrationReply = &q.RegistrationReply{}
+
+	// When calling a method you have to call it from the interface-name first
+	client, resp, err := srg.Send()
+
+	regreply.UnmarshalPrint(client, resp, err)
+}
+
+func provideValveSystemSpecs(system *q.System) {
+
+	system.SystemName = systemName
+	system.Address = systemIpAddress
+	system.Port = *port
+	system.Authenication = ""
+	system.Protocol = nil
+
+}
+
+func provideGetValveServiceSpecs(service *q.Service) {
+
+	service.ServiceDefinition = GetValveServiceDefinition
+	service.ServiceName = GetValveServiceName
+	service.Path = GetValveServicePath
+	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve)
+	service.Version = CurrentVersion
+
+}
+
+func provideTurnValveServiceSpecs(service *q.Service) {
+
+	service.ServiceDefinition = TurnValveServiceDefinition
+	service.ServiceName = TurnValveServiceName
+	service.Path = TurnValveServicePath
+	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve)
+	service.Version = CurrentVersion
+
+}
