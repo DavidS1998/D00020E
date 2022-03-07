@@ -16,6 +16,7 @@ const (
 	location       string = "Indoors"
 	Celsius        string = "Celsius"
 	CurrentVersion int    = 2
+	Id                    = "1"
 )
 
 var (
