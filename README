@@ -3,8 +3,12 @@ go run thermometer/thermometer.go &
 go run valve/valve.go & 
 go run thermostat/thermostat.go &
 
+Start pi-blaster:
+sudo pi-blaster --gpio 11 --pcm
+
+
 cd ~/ServiceRegistry/Arrowhead/
-go run *.go &
+go run *.go
 
 cd ~/Orchestrator/D0020E/
-go run main.go &
+go run main.go
