@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -12,10 +13,10 @@ import (
 
 const (
 	systemName     string = "Thermometer"
-	systemPort     int    = 8091
 	location       string = "Indoors"
 	Celsius        string = "Celsius"
 	CurrentVersion int    = 2
+	Id                    = "499"
 )
 
 var (
@@ -28,9 +29,12 @@ var (
 	TemperatureSensorID         string
 )
 
+var port = flag.Int("port", 8091, "listen to port")
+
 func main() {
-	fmt.Println("Initializing thermometer system on port 8091")
-	setLocalIP()
+
+	flag.Parse()
+	setLocalIP(port)
 
 	// What to execute for various page requests
 	go http.HandleFunc("/", home)
@@ -38,7 +42,7 @@ func main() {
 	go http.HandleFunc("/Thermometer/sendServiceReg/", registerServices)
 
 	// Listens for incoming connections
-	if err := http.ListenAndServe(":8091", nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", strconv.Itoa(*port)), nil); err != nil {
 		panic(err)
 	}
 }
@@ -79,14 +83,14 @@ func readTemperature(sensorID string) float64 {
 }
 
 // Used to find this system's networking addresses
-func setLocalIP() {
+func setLocalIP(port *int) {
 	addrs, _ := net.InterfaceAddrs()
 
 	// 0 is loopback, 1 is IPv4
 	var IPv4 = addrs[1].String()
 	IPv4 = strings.Split(IPv4, "/")[0]
 
-	fmt.Printf("\n Running on local address " + IPv4 + ":" + strconv.Itoa(systemPort))
+	fmt.Printf("\n Running on local address " + IPv4 + ":" + strconv.Itoa(*port))
 
 	systemIpAddress = IPv4
 }
@@ -117,7 +121,7 @@ func provideThermometerSystemSpecs(system *q.System) {
 
 	system.SystemName = systemName
 	system.Address = systemIpAddress
-	system.Port = systemPort
+	system.Port = *port
 	system.Authenication = ""
 	system.Protocol = nil
 
@@ -128,7 +132,7 @@ func provideThermometerServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = TempratureServiceDefinition
 	service.ServiceName = TemperatureServiceName
 	service.Path = TemperatureServicePath
-	service.Metadata = append(service.Metadata, TemperatureSensorID, location, Celsius)
+	service.Metadata = append(service.Metadata, TemperatureSensorID, location, Celsius, Id)
 	service.Version = CurrentVersion
 
 }

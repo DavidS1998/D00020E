@@ -26,7 +26,7 @@ func (srg *ServiceRegReq) Send() (*http.Client, *http.Response, error) {
 	}
 	fmt.Println("Payload printed: ", string(payload))
 
-	serviceRegistryURL := "http://localhost:4245/serviceregistry/register"
+	serviceRegistryURL := "http://31.208.108.251:4245/serviceregistry/register"
 
 	// Set the HTTP POST method, url and request body
 	req, err := http.NewRequest(http.MethodPost, serviceRegistryURL, bytes.NewBuffer(payload))
@@ -57,6 +57,7 @@ func (serviceReq *ServiceRequestForm) Send() (*http.Client, *http.Response, erro
 	}
 	fmt.Println("Payload printed: ", string(payload))
 
+	// Change "localhost" to the same IP address of where the file is being run.
 	serviceOrchestrationURL := "http://localhost:4000/Orc"
 
 	// Set the HTTP POST method, url and request body

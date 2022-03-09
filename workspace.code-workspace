@@ -4,12 +4,12 @@
 			"path": "."
 		},
 		{
-			"name": "Service Registry",
-			"path": "../ServiceRegistry/Arrowhead"
-		},
-		{
 			"name": "Orchestrator",
 			"path": "../Orchestrator/D0020E"
+		},
+		{
+			"name": "Arrowhead",
+			"path": "../Arrowhead"
 		}
 	],
 	"settings": {}

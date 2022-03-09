@@ -39,13 +39,13 @@ func NewLocalCache(cleanupInterval time.Duration) *LocalCache {
 	go func(cleanupInterval time.Duration) {
 		// defer decrementation on the waitgroup once the anonymous function is done executing
 		defer lc.Wg.Done()
-		lc.cleanupLoop(cleanupInterval)
+		lc.CleanupLoop(cleanupInterval)
 	}(cleanupInterval)
 
 	return lc
 }
 
-func (lc *LocalCache) cleanupLoop(interval time.Duration) {
+func (lc *LocalCache) CleanupLoop(interval time.Duration) {
 
 	// After each interval the ticker will send the time on the channel given to the ticker, this interval is used to do cleanup.
 	// Each interval a message is sent throught the ticker channel (t.C)
@@ -87,7 +87,7 @@ func (lc *LocalCache) Update(serviceDefinition string, p ProviderInfo, expireAtT
 }
 
 var (
-	errServiceNotInCache = errors.New("the Service isn't in cache")
+	ErrServiceNotInCache = errors.New("the Service isn't in cache")
 )
 
 func (lc *LocalCache) Read(serviceDefinition string) (ProviderInfo, error) {
@@ -96,7 +96,7 @@ func (lc *LocalCache) Read(serviceDefinition string) (ProviderInfo, error) {
 
 	cu, ok := lc.SystemService[serviceDefinition]
 	if !ok {
-		return ProviderInfo{}, errServiceNotInCache
+		return ProviderInfo{}, ErrServiceNotInCache
 	}
 
 	return cu.ProviderInfo, nil

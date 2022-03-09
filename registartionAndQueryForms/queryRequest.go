@@ -17,7 +17,7 @@ type RequestedService struct {
 	ServiceDefinitionRequirement string   `json:"serviceDefinitionRequirement"`
 	InterfaceRequirements        []string `json:"interfaceRequirements"`
 	SecurityRequirements         []string `json:"securityRequirements"`
-	MetadataRequirements         []string `json:"metadataRequirements"`
+	MetadataRequirements         []string `json:"metadataRequirementsGo"`
 	VersionRequirement           int      `json:"versionRequirement"`
 	MaxVersionRequirement        int      `json:"maxVersionRequirement"`
 	MinVersionRequirement        int      `json:"minVersionRequirement"`
