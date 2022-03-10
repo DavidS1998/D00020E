@@ -41,7 +41,7 @@ func main() {
 	flag.Parse()
 	initClient()
 
-	nlc = c.NewLocalCache(time.Duration(time.Second * 120))
+	nlc = c.NewLocalCache(time.Duration(time.Second * 3000))
 	defer nlc.StopCleanup()
 
 	// What to execute for various page requests
@@ -248,8 +248,20 @@ func getServiceDefinition(w http.ResponseWriter, r *http.Request) {
 		var s *q.ServiceRequestForm = &q.ServiceRequestForm{}
 		s.RequestedService.ServiceDefinitionRequirement = r.Form["service"][0]
 
+		if r.Form["metadata"][0] != "" {
+			fmt.Println("Sent METADATA 1")
+			s.RequestedService.MetadataRequirements = append(s.RequestedService.MetadataRequirements, r.Form["metadata"][0])
+		}
+		if r.Form["metadata2"][0] != "" {
+			fmt.Println("Sent METADATA 2")
+			s.RequestedService.MetadataRequirements = append(s.RequestedService.MetadataRequirements, r.Form["metadata2"][0])
+		}
+		if r.Form["metadata3"][0] != "" {
+			fmt.Println("Sent METADATA 3")
+			s.RequestedService.MetadataRequirements = append(s.RequestedService.MetadataRequirements, r.Form["metadata3"][0])
+		}
+
 		//metadata extract
-		s.RequestedService.MetadataRequirements = append(s.RequestedService.MetadataRequirements, r.Form["metadata"][0])
 		requestServiceFromOrchestrator(s)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)

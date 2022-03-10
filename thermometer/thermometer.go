@@ -13,10 +13,11 @@ import (
 
 const (
 	systemName     string = "Thermometer"
-	location       string = "Indoors"
-	Celsius        string = "Celsius"
+	location       string = "Outdoors"
+	location2      string = "Luleå"
+	Celsius        string = "Kelvin"
 	CurrentVersion int    = 2
-	Id                    = "499"
+	Id                    = "1337"
 )
 
 var (
@@ -132,7 +133,7 @@ func provideThermometerServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = TempratureServiceDefinition
 	service.ServiceName = TemperatureServiceName
 	service.Path = TemperatureServicePath
-	service.Metadata = append(service.Metadata, TemperatureSensorID, location, Celsius, Id)
+	service.Metadata = append(service.Metadata, TemperatureSensorID, location, location2, Celsius, Id)
 	service.Version = CurrentVersion
 
 }

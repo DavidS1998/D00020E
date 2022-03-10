@@ -18,9 +18,10 @@ import (
 const (
 	systemName     string = "Valve"
 	location       string = "Indoors"
-	EntityOfValve  string = "Degrees"
+	location2      string = "Boden"
+	EntityOfValve  string = "Radians"
 	CurrentVersion int    = 2
-	Id             string = "11"
+	Id             string = "7331"
 )
 
 var systemIpAddress string = ""
@@ -195,7 +196,7 @@ func provideGetValveServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = GetValveServiceDefinition
 	service.ServiceName = GetValveServiceName
 	service.Path = GetValveServicePath
-	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve, Id)
+	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve, Id, "")
 	service.Version = CurrentVersion
 
 }
@@ -205,7 +206,7 @@ func provideTurnValveServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = TurnValveServiceDefinition
 	service.ServiceName = TurnValveServiceName
 	service.Path = TurnValveServicePath
-	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve, Id)
+	service.Metadata = append(service.Metadata, ValveSensorID, location, location2, EntityOfValve, Id)
 	service.Version = CurrentVersion
 
 }
