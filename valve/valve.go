@@ -16,10 +16,12 @@ import (
 )
 
 const (
-	systemName     string = "Thermometer"
+	systemName     string = "Valve"
 	location       string = "Indoors"
-	EntityOfValve  string = "Degrees"
+	location2      string = "Boden"
+	EntityOfValve  string = "Radians"
 	CurrentVersion int    = 2
+	Id             string = "7331"
 )
 
 var systemIpAddress string = ""
@@ -75,6 +77,9 @@ func home(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "<p>Current position: </p>\n"+fmt.Sprintf("%.2f", percentage)+"%%")
 	fmt.Fprintf(w, "<br>")
 	fmt.Fprintf(w, strconv.Itoa(servoPosition)+"°"+"/180°")
+
+	fmt.Fprintf(w, "<br>")
+	fmt.Fprintf(w, "<a href='/Valve/sendServiceReg/'>Send Request </a><br>")
 }
 
 // Used with GET requests to get current position
@@ -84,6 +89,7 @@ func getCurrentPosition(w http.ResponseWriter, req *http.Request) {
 
 // Decodes the position data and normalizes it to a possible range (0-180)
 func readTurnCommand(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("VALVE: PUT request received")
 	// Decode JSON and get Degrees
 	var v ValveData
 	err := json.NewDecoder(req.Body).Decode(&v)
@@ -190,7 +196,7 @@ func provideGetValveServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = GetValveServiceDefinition
 	service.ServiceName = GetValveServiceName
 	service.Path = GetValveServicePath
-	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve)
+	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve, Id, "")
 	service.Version = CurrentVersion
 
 }
@@ -200,7 +206,7 @@ func provideTurnValveServiceSpecs(service *q.Service) {
 	service.ServiceDefinition = TurnValveServiceDefinition
 	service.ServiceName = TurnValveServiceName
 	service.Path = TurnValveServicePath
-	service.Metadata = append(service.Metadata, ValveSensorID, location, EntityOfValve)
+	service.Metadata = append(service.Metadata, ValveSensorID, location, location2, EntityOfValve, Id)
 	service.Version = CurrentVersion
 
 }
