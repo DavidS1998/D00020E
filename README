@@ -1,14 +1,14 @@
-cd ~/ApplicationSystem
-go run thermometer/thermometer.go & 
-go run valve/valve.go & 
-go run thermostat/thermostat.go &
+To run each of the systems, do the following:
+Build the files with all its dependencies
+  go build thermometer/thermometer.go
+  go build valve/valve.go
+  go build thermostat/thermostat.go
+Then run it in the shell with the generated files
+  ./thermometer
+  ./valve
+  ./thermostat
+  
+For the valve system to interface with the hardware servo properly, download and install pi-blaster and run it with the following paramters:
+  sudo pi-blaster --gpio 11 --pcm
 
-Start pi-blaster:
-sudo pi-blaster --gpio 11 --pcm
-
-
-cd ~/ServiceRegistry/Arrowhead/
-go run *.go
-
-cd ~/Orchestrator/D0020E/
-go run main.go
+See instructions on the associated GitHub pages on how to run the Service Registry and Orchestrator systems.
